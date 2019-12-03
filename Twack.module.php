@@ -1,0 +1,792 @@
+<?php
+
+namespace ProcessWire;
+
+use \Exception;
+
+/**
+ * Twack: Reusable components for your ProcessWire-templates
+ *
+ * @author Sebastian Schendel
+ */
+class Twack extends WireData implements Module, ConfigurableModule {
+    // Global namespace
+    // Could be replaced with an other namespace to prevent classname-conflicts.
+    const TEMPLATENAMESPACE = '\\ProcessWire\\';
+
+    // Global parameters which will be passed on every created component.
+    protected $parameters = array();
+
+    // Global components can be accessed by their global name from any other component.
+    protected $globalComponents = array();
+
+    // Array, to save all created service-objects. Every service is a singleton and can be created only once.
+    protected $services = array();
+
+    // $control holds the central control-class, which locates component-classes and generates new Objects from them.
+    protected $control;
+
+    // $devEchoComponent is a statically accessable component, which can be used to echo development outputs. It's basically a var_dump, but with a nicer formatted output. A custom devEcho-component can be used to give the development-output a place in the site's layout.
+    protected static $devEchoComponent;
+
+    // If true, Twack will not Render in HTML but render the Ajax-representation of the components.
+    public $forceAjax = false;
+
+    // If set, Twack will not make an Ajax-Output with Statuscode and Exit. It will only generate a valid JSON-String or an Exception, which must be handled otherwise.
+    public $forcePlainAjaxOutput = false;
+
+    public static $manifest = false;
+
+    /**
+     * @internal
+     */
+    public static function getModuleInfo() {
+        return array(
+            'title'    => 'Twack',
+            'author'   => 'Sebastian Schendel',
+            'version'  => '2.1.1',
+            'summary'  => 'Reusable components for your ProcessWire-templates.',
+            'singular' => true,
+            'autoload' => true,
+            'icon'     => 'cubes',
+            'requires' => array('PHP>=5.5.0', 'ProcessWire>=3.0.0'),
+        );
+    }
+
+    /**
+     * @internal
+     */
+    public function getModuleConfigArray() {
+        return array(
+            'twack_components_directory' => array(
+                'type'        => 'text',
+                'label'       => 'Components Directory',
+                'value'       => 'site/templates/components',
+                'notes'       => 'site/templates/components',
+                'description' => 'Location of the directory, where Twack will search for its components. Base: ProcessWire-Root (Location of index.php)'
+            ),
+            'twack_services_directory' => array(
+                'type'        => 'text',
+                'label'       => 'Services Directory',
+                'value'       => 'site/templates/services',
+                'notes'       => 'default: site/templates/services',
+                'description' => 'Location of the directory, where Twack will search for service-components. Base: ProcessWire-Root (Location of index.php)'
+            ),
+            'twack_control_class' => array(
+                'type'        => 'text',
+                'label'       => 'TwackControl',
+                'value'       => '',
+                'description' => 'You can specify a custom TwackControl-class, where you can customise the way Twack handles component\’s paths and names. This option is optional and should normally not be necessary to use.',
+                'notes'       => 'A TwackControl-Class must inherit from \ProcessWire\TwackControl.'
+            ),
+            'twack_ajax_activate' => array(
+                'type'        => 'checkbox',
+                'label'       => 'Allow calls via ajax and handle requests',
+                'columnWidth' => '50%'
+            ),
+            'twack_ajax_parameter' => array(
+                'type'        => 'text',
+                'value'       => 'twack-ajax',
+                'label'       => 'GET-Parameter, which identifies a Twack-Ajax-Call',
+                'columnWidth' => '50%'
+            ),
+            'twack_manifest_path' => array(
+                'type'        => 'text',
+                'label'       => 'Path to a manifest.json',
+                'value'       => '',
+                'description' => 'Path to a manifest.json file, which contains links from the original filenames to generated filenames (e.g. filenames with hash-values for cache-busting)'
+            )
+        );
+    }
+
+    public function __construct() {
+        require_once 'Exceptions.php';
+        require_once 'TwackComponent.class.php';
+        require_once 'TwackNullComponent.class.php';
+        require_once 'TwackControl.class.php';
+        require_once 'DevEchoComponent.class.php';
+    }
+
+    public function init() {
+        $this->addHookBefore('Page::render', $this, 'hookBeforePageRender');
+    }
+
+    /**
+     * Render-Hook, that looks for ajax-calls and answers them with json-strings. Must be enabled in module-config.
+     *
+     * @param  HookEvent $e
+     */
+    public function hookBeforePageRender(HookEvent $e) {
+        $page = $e->object;
+        if (!$this->isTwackAjaxCall()) {
+            return;
+        }
+
+        if ($this->forcePlainAjaxOutput) {
+            return;
+        }
+
+        $this->ajaxCall();
+    }
+
+    public function isTwackAjaxCall() {
+        if ($this->forceAjax) {
+            return true;
+        }
+
+        if (!$this->isAjax()) {
+            return false;
+        }
+
+        $ajaxParameterKey = $this->configValue('twack_ajax_parameter');
+        if (empty($this->configValue('twack_ajax_activate'))) {
+            return false;
+        }
+
+        if (empty($ajaxParameterKey) || (empty($_GET[$ajaxParameterKey]) && empty($_POST[$ajaxParameterKey]))) {
+            return false;
+        }
+
+        return true;
+    }
+
+    public static function getManifest() {
+        if (is_array(self::$manifest)) {
+            return self::$manifest;
+        }
+
+        $configdata = wire('modules')->getModuleConfigData('Twack');
+
+        if (!isset($configdata['twack_manifest_path'])) {
+            self::$manifest = array();
+            return self::$manifest;
+        }
+
+        $manifestPath = $configdata['twack_manifest_path'];
+        if (empty($manifestPath)) {
+            self::$manifest = array();
+            return self::$manifest;
+        }
+        $manifestPath = wire('config')->paths->root . $manifestPath;
+        $manifest     = file_get_contents($manifestPath);
+        if (!$manifest) {
+            self::$manifest = array();
+            return self::$manifest;
+        }
+
+        $manifest = json_decode($manifest, true);
+        if (!$manifest) {
+            self::$manifest = array();
+            return self::$manifest;
+        }
+
+        self::$manifest = $manifest;
+        return self::$manifest;
+    }
+
+    public static function getManifestFilename($originalFilename) {
+        if (!isset(self::getManifest()[$originalFilename])) {
+            return $originalFilename;
+        }
+
+        $filename = explode('/', self::getManifest()[$originalFilename]);
+        return end($filename);
+    }
+
+    /**
+     * Provides the current instance of TwackControl.
+     * @return TwackControl
+     */
+    protected function getControl() {
+        // TwackControl is a singleton. If an instance is already created, it can be returned directly:
+        if ($this->control) {
+            return $this->control;
+        }
+
+        // Paths for TwackControl:
+        $controlArgs = array(
+            'components' => array(),
+            'services'   => array()
+        );
+
+        $rootPath = wire('config')->paths->root;
+
+        // Determine which path to choose for components directory:
+        $componentsDirectory = $this->configValue('twack_components_directory');
+        if (empty($componentsDirectory)) {
+            $componentsDirectory = 'site/templates/components';
+        }
+        $componentsDirectory = Twack::addTrailingSeparator($componentsDirectory);
+
+        $controlArgs['components']['directory'] = $componentsDirectory;
+        $controlArgs['components']['path']      = $rootPath . $componentsDirectory;
+
+        // Determine which path to choose for service directory:
+        $servicesDirectory = $this->configValue('twack_services_directory');
+        if (empty($servicesDirectory)) {
+            $servicesDirectory = 'site/templates/services';
+        }
+        $servicesDirectory = Twack::addTrailingSeparator($servicesDirectory);
+
+        $controlArgs['services']['directory'] = $servicesDirectory;
+        $controlArgs['services']['path']      = $rootPath . $servicesDirectory;
+
+        // Should a custom TwackControl-class be used? It can be set in module’s configuration:
+        if (!empty($this->configValue('twack_control_class'))) {
+            $controlClassPath = Twack::addTrailingSeparator($this->configValue('twack_control_class'));
+            if (file_exists($rootPath . $controlClassPath)) {
+                require_once $rootPath . $controlClassPath;
+            }
+            $controlClassname = Twack::TEMPLATENAMESPACE . Twack::getClassnameFromPath($controlClassPath);
+
+            if (class_exists($controlClassname)) {
+                try {
+                    $this->control = new $controlClassname($controlArgs);
+                } catch (Exception $e) {
+                    $this->control = new TwackControl($controlArgs);
+                }
+            }
+        }
+
+        if (!$this->control || !is_subclass_of($this->control, Twack::TEMPLATENAMESPACE . 'TwackControl')) {
+            $this->control = new TwackControl($controlArgs);
+        }
+
+        return $this->control;
+    }
+
+    /**
+     * Owerwrites currently used instance of TwackControl.
+     * @param TwackControl $control
+     */
+    public function setControl(TwackControl $control) {
+        $this->control = $control;
+    }
+
+    /**
+     * Can be used to require a component without generating an instance. Useful for Extends.
+     * @param  string $componentname
+     * @param  array  $args
+     */
+    public function requireComponent($componentname, $args = array()) {
+        return $this->getControl()->getPathsForComponent($componentname, $args = array());
+    }
+
+    /**
+     * Gets or sets a value from module’s configuration
+     *
+     * @param  string $key name of config-field
+     * @param  $wert (optional) new value for the field
+     * @return value
+     */
+    private function configValue($key, $value = null) {
+        $configdata = wire('modules')->getModuleConfigData('Twack');
+
+        if (!isset($configdata[$key])) {
+            return null;
+        }
+
+        if ($value !== null) {
+            // Value should be set:
+            $configdata[$key] = $value;
+            wire('modules')->saveModuleConfigData('Twack', $configdata);
+        }
+
+        return $configdata[$key];
+    }
+
+    /**
+     * Returns a global Twack-parameter. Every component has access to these parameters and can do changes to them.
+     * @internal
+     */
+    public function getGlobalParameter($parametername = null) {
+        if (!empty($parametername)) {
+            if (isset($this->parameters[$parametername])) {
+                return $this->parameters[$parametername];
+            }
+        }
+        return null;
+    }
+
+    /**
+     * Returns all globally set parameters.
+     * @return array
+     */
+    public function getGlobalParameters() {
+        return $this->parameters;
+    }
+
+    /**
+     * Adds parameters to the globally set parameters. If a parameter-key already exists it will be overwritten.
+     * @param array $parameter
+     * @internal
+     * @deprecated
+     */
+    public function addGlobalParameters(array $parameters) {
+        $this->parameters = array_merge($this->parameters, $parameters);
+    }
+
+    /**
+     * Adds an alias-name for a component, under which the component can be alternatively accessed.
+     *
+     * @param string $aliasname
+     * @param string $componentname Classname of the Component (in CamelCase or under_score)
+     * @param array $args (optional) You can add custom arguments (i.e. component-parameters) for this alias. The arguments will influence the component only if it is called by the alias-name.
+     *
+     * @return boolean
+     */
+    public function addComponentAlias($aliasname, $componentname, $args = array()) {
+        return $this->getControl()->addComponentAlias($aliasname, $componentname, $args);
+    }
+
+    /**
+     * Returns the original name of the component from an alias-name. Aliases must be added via addComponentAlias().
+     *
+     * @param  string $aliasname
+     * @return string|null 	Classname of the original component or NULL if the alias does not exist.
+     */
+    public function getComponentnameForAlias($aliasname) {
+        return $this->getControl()->getComponentnameForAlias($aliasname);
+    }
+
+    /**
+     * Returns all custom arguments that are set for the requested alias-name.
+     *
+     * @param  string $aliasname
+     * @return array|null  Array of arguments or NULL, if alias does not exist.
+     */
+    public function getComponentArgsForAlias($aliasname) {
+        return $this->getControl()->getComponentArgsForAlias($aliasname);
+    }
+
+    /**
+     * Registers a component-object for global use. Global components can be called anywhere in the code via TwackObject->getComponent()
+     *
+     * @param TwackComponent 	$component  	Classname of the component which should be globalized.
+     * @param string 			$globalName 	Global name, under which the component can be accessed.
+     */
+    public function makeComponentGlobal(TwackComponent $component, $globalName) {
+        if (!is_string($globalName) || empty($globalName)) {
+            throw new TwackException('No global name set. You have to set the $globalName (second parameter) for the component, under which it will be accessable globally.');
+        }
+        $this->globalComponents[$globalName] = $component;
+        return $component;
+    }
+
+    /**
+     * Returns a global component. It has to be globalized previously via TwackModule->makeComponentGlobal().
+     *
+     * @param  string $globalName 					Global name, under which the component can be accessed.
+     * @return TwackComponent|TwackNullComponent 	Returns the requested TwackComponent or TwackNullComponent, if the global component could not be found.
+     */
+    public function getComponent($globalName) {
+        if (!isset($this->globalComponents[$globalName])) {
+            return new TwackNullComponent();
+        }
+        return $this->globalComponents[$globalName];
+    }
+
+    /**
+     * Returns a new TwackComponent-object for the requested classname.
+     *
+     * @param string $componentname 		Classname (or alias) of the requested component.
+     * @param array $args 					Additional arguments, which should be passed to the component-object.
+     *                     	   				You can pass all custom values and the following predefined arguments to
+     *                     	   				influence the component's behaviour:
+     *                             				page           	Page, which should be used in the component
+     *                             								(Default: NULL, which results in passing the page of
+     *                             								the calling component or wire('page')).
+     *                                     		parameters      Parameters, which will be accessable in the component
+     *                                     						via $this->[parameterkey] (Default: array())
+     *                                          directory       Where can the component be found? Base is the components-folder.
+     *                                          globalName		Makes the new component globally accessable.
+     *
+     * @throws TwackException
+     * @throws ComponentNotFoundException
+     * @return TwackComponent
+     */
+    public function getNewComponent($componentname, $args = array()) {
+        if (!isset($args['backtrace'])) {
+            $args['backtrace'] = debug_backtrace();
+        }
+
+        $component = $this->getControl()->getNewComponent($componentname, $args);
+        if (isset($args['globalName']) && !empty($args['globalName'])) {
+            $this->makeComponentGlobal($component, $args['globalName']);
+        }
+        return $component;
+    }
+
+    /**
+     * Returns a service-instance. Services are singletons, so you will get the same instance everytime.
+     * @param  string $servicename
+     * @return TwackComponent
+     */
+    public function getService($servicename) {
+        if (!isset($this->services[$servicename])) {
+            // The service was not initialized yet. Search it and save it for later calls.
+            $this->services[$servicename] = $this->getNewComponent($servicename, array('componentType' => 'service'));
+        }
+        return $this->services[$servicename];
+    }
+
+    /**
+     * Transfers a value from $_POST to wire('input')->whitelist after applying sanitizers to it.
+     * @param  string  $key      	(i.e. $_POST[$key])
+     * @param  string  $sanitizer 	name of the sanitizer-function, which should be applyed. For a list of all possible sanitizers see https://processwire.com/api/variables/sanitizer/
+     * @return Sanitzed value
+     */
+    public function parameterToWhitelist($key, $sanitizer = 'text', $sanitizerOptions = array(), $sanitizerOptions2 = array()) {
+        $value = wire('input')->post($key);
+        if (empty($value)) {
+            $value = wire('input')->get($key);
+        }
+
+        if (is_string($sanitizer) && !empty($sanitizer) && method_exists(wire('sanitizer'), $sanitizer)) {
+            if (!empty($sanitizerOptions) && !empty($sanitizerOptions2)) {
+                $value = wire('sanitizer')->{$sanitizer}($value, $sanitizerOptions, $sanitizerOptions2);
+            } elseif (!empty($sanitizerOptions)) {
+                $value = wire('sanitizer')->{$sanitizer}($value, $sanitizerOptions);
+            } else {
+                $value = wire('sanitizer')->{$sanitizer}($value);
+            }
+        }
+        wire('input')->whitelist($key, $value);
+    }
+
+    /**
+     * Handles an ajax-call
+     */
+    public function ajaxCall() {
+        try {
+            $this->parameterToWhitelist('action', 'name');
+            if (wire('input')->whitelist('action') === 'getComponent') {
+                // Call a special component for its Ajax-Output
+                $this->parameterToWhitelist('page', 'id');
+                $this->parameterToWhitelist('directory', 'pagePathName');
+                $this->parameterToWhitelist('dir', 'pagePathName'); // Alias for directory
+                $this->parameterToWhitelist('componentType', 'name');
+                $this->parameterToWhitelist('type', 'name'); // Alias for componentType
+                $this->parameterToWhitelist('component', 'varName');
+
+                $args = wire('input')->post('args');
+                if (empty($args)) {
+                    $args = wire('input')->get('args');
+                }
+
+                $args['page'] = wire('page');
+                if (!empty(wire('input')->whitelist('page'))) {
+                    $args['page'] = wire('pages')->get('id=' . wire('input')->whitelist('page'));
+                }
+
+                $args['directory'] = '';
+                if (!empty(wire('input')->whitelist('directory'))) {
+                    $args['directory'] = wire('input')->whitelist('directory');
+                } elseif (!empty(wire('input')->whitelist('dir'))) {
+                    $args['directory'] = wire('input')->whitelist('dir');
+                }
+
+                $args['componentType'] = 'component';
+                if (!empty(wire('input')->whitelist('componentType'))) {
+                    $args['componentType'] = wire('input')->whitelist('componentType');
+                } elseif (!empty(wire('input')->whitelist('type'))) {
+                    $args['componentType'] = wire('input')->whitelist('type');
+                }
+
+                $component = $this->getNewComponent(
+                    wire('input')->whitelist('component'),
+                    $args
+                );
+
+                if ($component instanceof TwackNullComponent) {
+                    throw new TwackAjaxException('The requested component could not be initialized.');
+                }
+
+                if ($this->forcePlainAjaxOutput) {
+                    return $component->getAjax();
+                }
+                Twack::sendResponse($component->getAjax(), 200);
+            }
+
+            throw new TwackAjaxException('The requested action could not be completed.', array(), 405);
+        } catch (TwackAjaxException $e) {
+            if ($this->forcePlainAjaxOutput) {
+                throw $e;
+            }
+            Twack::sendResponse(array(
+                'message' => $e->getMessage(),
+                'data'    => $e->additionalData
+            ), $e->getCode());
+        } catch (TwackException $e) {
+            if ($this->forcePlainAjaxOutput) {
+                throw $e;
+            }
+            Twack::sendResponse(array(
+                'message' => $e->getMessage()
+            ), $e->getCode());
+        } catch (\Exception $e) {
+            if ($this->forcePlainAjaxOutput) {
+                throw $e;
+            }
+            Twack::sendResponse(array(
+                'message' => $e->getMessage()
+            ), 400);
+        }
+
+        if ($this->forcePlainAjaxOutput) {
+            throw new TwackAjaxException('A mysterious and unknown error appeared and could not be solved.', 400);
+        }
+        Twack::sendResponse(array(
+            'message' => 'A mysterious and unknown error appeared and could not be solved.'
+        ), 400);
+    }
+
+    /*
+     *************************************************
+     * Helpers
+     */
+
+    /**
+     * Ensures that there is a separator at the end of a path-string
+     * @param string $path
+     */
+    public static function addTrailingSeparator($path) {
+        if (is_string($path) && strlen($path) > 0 && substr($path, -1) != DIRECTORY_SEPARATOR) {
+            $path .= DIRECTORY_SEPARATOR;
+        }
+        return $path;
+    }
+
+    public static function addLeadingSeparator($path) {
+        if (is_string($path) && strlen($path) > 0 && substr($path, 0, 1) != DIRECTORY_SEPARATOR) {
+            $path = DIRECTORY_SEPARATOR . $path;
+        }
+        return $path;
+    }
+
+    /**
+     * Transforms a CamelCaseString to an under_score_string
+     * @param string $str 	String in camelcase-format
+     * @return string  		Translated into underscore-format
+     */
+    public static function camelCaseToUnderscore($camelCaseString) {
+        $camelCaseString[0] = strtolower($camelCaseString[0]);
+        return strtolower(preg_replace(['/([a-z\d])([A-Z])/', '/([^_])([A-Z][a-z])/'], '$1_$2', $camelCaseString));
+    }
+
+    /**
+     * Transforms an under_score_string to a CamelCaseString (Upper)
+     * @param  string $underscoreString  	String in underscore-format
+     * @return string                		Translated into camelcase-format
+     */
+    public static function underscoreToUpperCamelCase($underscoreString) {
+        return self::underscoreToCamelCase($underscoreString, true);
+    }
+
+    /**
+     * Transforms an under_score_string to a camelCaseString (Lower)
+     * @param  string $underscoreString  	String in underscore-format
+     * @return string                		Translated into camelcase-format
+     */
+    public static function underscoreToLowerCamelCase($underscoreString) {
+        return self::underscoreToCamelCase($underscoreString, false);
+    }
+
+    /**
+     * Translates a string with underscores
+     * into camel case (e.g. first_name -> firstName)
+     * by https://paulferrett.com/2009/php-camel-case-functions/
+     *
+     * @param string $str String in underscore format
+     * @param bool $capitalise_first_char If true, capitalise the first char in $str
+     * @return string $str translated into camel caps
+     */
+    public static function underscoreToCamelCase($str, $capitalizeFirstCharacter = false) {
+        if (!$capitalizeFirstCharacter) {
+            $str = lcfirst($str);
+        }
+        $str = str_replace('_', '', ucwords($str, '_'));
+
+        return $str;
+    }
+
+    /**
+     * Returns the classname for a given path.
+     * @param  string $path
+     * @return string classname.
+     */
+    public static function getClassnameFromPath($path) {
+        return Twack::underscoreToUpperCamelCase(basename($path, '.class.php'));
+    }
+
+    /**
+     * Shortens a text to a characterlimit, but splits between complete words.
+     * @param  string  $str   	Text that should be shortened
+     * @param  integer $limit  	Maximum count of characters (default: 120)
+     * @param  string  $endstr 	Suffix which will be added to a shortened string (default: '…')
+     * @return string 			Returns the shortened string with suffix
+     */
+    public static function wordLimiter($str, $limit = 120, $endstr = '…') {
+        $str = strip_tags($str);
+        if (strlen($str) <= $limit) {
+            return $str;
+        }
+
+        $out = substr($str, 0, $limit);
+        $pos = strrpos($out, ' ');
+        if ($pos > 0) {
+            $out = substr($out, 0, $pos);
+        }
+        return $out .= $endstr;
+    }
+
+    /**
+     * Registers a custom DevEchoComponent, which handles all Twack::devEcho()-outputs. If no custom component is defined the devEcho()-outputs will be rendered before the site's contents in <pre>-tags.
+     * @param  DevEchoComponent $component
+     */
+    public function registerDevEchoComponent(DevEchoComponent $component) {
+        self::$devEchoComponent = $component;
+    }
+
+    /**
+     * Returns the currently registered DevEchoComponent
+     * @return DevEchoComponent
+     */
+    public static function getDevEchoComponent() {
+        if (self::$devEchoComponent && self::$devEchoComponent instanceof DevEchoComponent) {
+            return self::$devEchoComponent;
+        }
+
+        $args = array(
+            'location' => array(
+                'directory'       => '',
+                'path'            => '',
+                'processwirePath' => '',
+                'classname'       => '',
+                'type'            => 'controller',
+            )
+        );
+        return new DevEchoComponent($args);
+    }
+
+    /**
+     * Outputs custom dev-outputs for development purposes. Twack::devEcho()-outputs will only be rendered if a superuser is logged in and the call is not an ajax-call.
+     */
+    public static function devEcho() {
+        if (!wire('user')->isSuperuser() || self::isAjax()) {
+            return;
+        }
+
+        if (func_num_args() > 0) {
+            $args      = func_get_args();
+            $backtrace = debug_backtrace();
+
+            $filename     = '';
+            $functionCall = '';
+            $line         = '';
+
+            // Trace for the last call from our components-folder, don't output processwire's traces:
+            foreach ($backtrace as $btElement) {
+                if (!isset($btElement['file']) || !isset($btElement['line']) || !isset($btElement['function'])) {
+                    break;
+                }
+
+                $filename = $btElement['file'];
+                if (strstr($filename, '/site/templates/') === false) {
+                    continue;
+                }
+
+                $filename     = substr(strstr($filename, '/site/templates/'), strlen('/site/templates/') - 1);
+                $functionCall = $btElement['function'];
+                $line         = $btElement['line'];
+                break;
+            }
+
+            $devEchoComponent = self::getDevEchoComponent();
+            $devEchoComponent->devEcho($args, $filename, $functionCall, $line);
+        }
+    }
+
+    public static function isAjax() {
+        return wire('config')->ajax;
+    }
+
+    /**
+     * Liefert zu einem HTTP-Statuscode die korrekte Status-Message
+     * Returns the http-statustext for a given statuscode
+     * @param  int $status
+     * @return string
+     */
+    protected static function getStatusCodeMessage($status) {
+        $codes = array(
+            100 => 'Continue',
+            101 => 'Switching Protocols',
+            200 => 'OK',
+            201 => 'Created',
+            202 => 'Accepted',
+            203 => 'Non-Authoritative Information',
+            204 => 'No Content',
+            205 => 'Reset Content',
+            206 => 'Partial Content',
+            300 => 'Multiple Choices',
+            301 => 'Moved Permanently',
+            302 => 'Found',
+            303 => 'See Other',
+            304 => 'Not Modified',
+            305 => 'Use Proxy',
+            306 => '(Unused)',
+            307 => 'Temporary Redirect',
+            400 => 'Bad Request',
+            401 => 'Unauthorized',
+            402 => 'Payment Required',
+            403 => 'Forbidden',
+            404 => 'Not Found',
+            405 => 'Method Not Allowed',
+            406 => 'Not Acceptable',
+            407 => 'Proxy Authentication Required',
+            408 => 'Request Timeout',
+            409 => 'Conflict',
+            410 => 'Gone',
+            411 => 'Length Required',
+            412 => 'Precondition Failed',
+            413 => 'Request Entity Too Large',
+            414 => 'Request-URI Too Long',
+            415 => 'Unsupported Media Type',
+            416 => 'Requested Range Not Satisfiable',
+            417 => 'Expectation Failed',
+            500 => 'Internal Server Error',
+            501 => 'Not Implemented',
+            502 => 'Bad Gateway',
+            503 => 'Service Unavailable',
+            504 => 'Gateway Timeout',
+            505 => 'HTTP Version Not Supported'
+        );
+
+        return (isset($codes[$status])) ? $codes[$status] : '';
+    }
+
+    /**
+     * Outputs a given body with explicitly set HTTP-headers and exits after it.
+     *
+     * @param  string  $body         	Content which should be outputted. If an array is given,
+     *                                 	application/json will be chosen as contentType automatically.
+     * @param  integer $status       	HTTP-statuscode (Default: 200 ->ok)
+     * @param  string  $contentType 	ContentType (i.e. 'text/html' or 'application/json')
+     */
+    public static function sendResponse($body = '', $status = 200, $contentType = 'text/html') {
+        $statusHeader = 'HTTP/1.1 ' . $status . ' ' . self::getStatusCodeMessage($status);
+        header($statusHeader);
+
+        if (is_array($body)) {
+            $body = json_encode($body);
+            if ($contentType === 'text/html') {
+                $contentType = 'application/json';
+            }
+        }
+
+        header('Content-type: ' . $contentType);
+
+        echo $body;
+        exit();
+    }
+}
