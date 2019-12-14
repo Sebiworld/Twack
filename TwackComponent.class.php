@@ -532,9 +532,10 @@ class TwackComponent extends WireData {
             );
 
             if ($content instanceof PageImage) {
-                $output['basename_mini'] = $content->size(600, 0)->basename;
-                $output['width']         = $content->width;
-                $output['height']        = $content->height;
+                $output['basename_mini']          = $content->size(600, 0)->basename;
+                $output['width']                  = $content->width;
+                $output['height']                 = $content->height;
+                $output['dimension_ratio']        = $content->width / $content->height;
 
                 if ($content->original) {
                     $output['original'] = [
@@ -544,7 +545,8 @@ class TwackComponent extends WireData {
                         'filesizeStr'   => $content->original->filesizeStr,
                         'ext'           => $content->original->ext,
                         'width'         => $content->original->width,
-                        'height'        => $content->original->height
+                        'height'        => $content->original->height,
+                        'dimension_ratio' => $content->original->width / $content->original->height
                     ];
                 }
             }
