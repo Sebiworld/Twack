@@ -430,13 +430,13 @@ class TwackComponent extends WireData {
         $output = '';
         try {
             $output .= $this->getView($viewname, $args);
-        } catch (Exception $e) {
+
+            // If the styles have not yet been output within the component, they are appended at the end:
+            $output .= $this->getInlineStyles(false);
+        } catch (\Throwable $e) {
             Twack::devEcho($e->getMessage());
             // return '<div class="alert alert-danger" role="alert"><strong>An error has occurred:</strong> ' . $e->getMessage() . '</div>';
         }
-
-        // If the styles have not yet been output within the component, they are appended at the end:
-        $output .= $this->getInlineStyles(false);
 
         return $output;
     }
@@ -486,17 +486,17 @@ class TwackComponent extends WireData {
 
     public function renderAjax() {
         $ajax    = $this->getAjax();
-        $ausgabe = array();
+        $output = array();
         if (is_array($ajax)) {
-            $ausgabe = $ajax;
+            $output = $ajax;
         } elseif (!empty((string) $ajax)) {
-            $ausgabe['wert'] = (string) $ajax;
+            $output['value'] = (string) $ajax;
         }
 
         if ($this->twack->forcePlainAjaxOutput) {
-            return json_encode($ausgabe);
+            return json_encode($output);
         }
-        Header::sendResponse(200, json_encode($ausgabe), 'application/json');
+        Twack::sendResponse(200, json_encode($output), 'application/json');
     }
 
     /**
