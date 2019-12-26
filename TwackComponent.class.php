@@ -535,7 +535,7 @@ class TwackComponent extends WireData {
                 $output['basename_mini']          = $content->size(600, 0)->basename;
                 $output['width']                  = $content->width;
                 $output['height']                 = $content->height;
-                $output['dimension_ratio']        = $content->width / $content->height;
+                $output['dimension_ratio']        = round($content->width / $content->height, 2);
 
                 if ($content->original) {
                     $output['original'] = [
@@ -546,8 +546,16 @@ class TwackComponent extends WireData {
                         'ext'           => $content->original->ext,
                         'width'         => $content->original->width,
                         'height'        => $content->original->height,
-                        'dimension_ratio' => $content->original->width / $content->original->height
+                        'dimension_ratio' => round($content->original->width / $content->original->height, 2)
                     ];
+                }
+            }
+
+            // Output custom filefield-values (since PW 3.0.142)
+            $fieldValues = $content->get('fieldValues');
+            if(!empty($fieldValues) && is_array($fieldValues)){
+                foreach($fieldValues as $key => $value){
+                    $output[$key] = $value;
                 }
             }
         } elseif ($content instanceof Template && $content->id) {
