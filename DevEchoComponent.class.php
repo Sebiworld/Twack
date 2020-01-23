@@ -1,8 +1,6 @@
 <?php
 namespace ProcessWire;
 
-use \Exception;
-
 class DevEchoComponent extends TwackComponent {
 	public function __construct($args = array()) {
 		parent::__construct($args);
@@ -16,15 +14,15 @@ class DevEchoComponent extends TwackComponent {
 		echo "<pre>";
 
 		echo "<strong>";
-		echo "DEV-Ausgabe";
+		echo "DEV-Output";
 		if (!empty($filename)) {
 			echo " in " . $filename;
 		}
 		if (!empty($functionname)) {
-			echo ", Funktionsaufruf " . $functionname . "()";
+			echo ", function-call " . $functionname . "()";
 		}
 		if (!empty($line)) {
-			echo ", Zeile " . $line;
+			echo ", in line " . $line;
 		}
 		echo ":</strong><br/>";
 
