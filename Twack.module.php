@@ -30,10 +30,10 @@ class Twack extends WireData implements Module, ConfigurableModule {
     protected static $devEchoComponent;
 
     // If true, Twack will not Render in HTML but render the Ajax-representation of the components.
-    public $forceAjax = false;
+    protected $forceAjax = false;
 
     // If set, Twack will not make an Ajax-Output with Statuscode and Exit. It will only generate a valid JSON-String or an Exception, which must be handled otherwise.
-    public $forcePlainAjaxOutput = false;
+    // public $forcePlainAjaxOutput = false;
 
     public static $manifest = false;
 
@@ -44,7 +44,7 @@ class Twack extends WireData implements Module, ConfigurableModule {
         return array(
             'title'    => 'Twack',
             'author'   => 'Sebastian Schendel',
-            'version'  => '2.1.1',
+            'version'  => '2.1.2',
             'summary'  => 'Reusable components for your ProcessWire-templates.',
             'singular' => true,
             'autoload' => true,
@@ -79,17 +79,6 @@ class Twack extends WireData implements Module, ConfigurableModule {
                 'description' => 'You can specify a custom TwackControl-class, where you can customise the way Twack handles component\’s paths and names. This option is optional and should normally not be necessary to use.',
                 'notes'       => 'A TwackControl-Class must inherit from \ProcessWire\TwackControl.'
             ),
-            'twack_ajax_activate' => array(
-                'type'        => 'checkbox',
-                'label'       => 'Allow calls via ajax and handle requests',
-                'columnWidth' => '50%'
-            ),
-            'twack_ajax_parameter' => array(
-                'type'        => 'text',
-                'value'       => 'twack-ajax',
-                'label'       => 'GET-Parameter, which identifies a Twack-Ajax-Call',
-                'columnWidth' => '50%'
-            ),
             'twack_manifest_path' => array(
                 'type'        => 'text',
                 'label'       => 'Path to a manifest.json',
@@ -121,12 +110,14 @@ class Twack extends WireData implements Module, ConfigurableModule {
         if (!$this->isTwackAjaxCall()) {
             return;
         }
+    }
 
-        if ($this->forcePlainAjaxOutput) {
-            return;
-        }
+    public function enableAjaxResponse(){
+        $this->forceAjax = true;
+    }
 
-        $this->ajaxCall();
+    public function disableAjaxResponse(){
+        $this->forceAjax = false;
     }
 
     public function isTwackAjaxCall() {
@@ -134,16 +125,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
             return true;
         }
 
-        if (!$this->isAjax()) {
-            return false;
-        }
-
-        $ajaxParameterKey = $this->configValue('twack_ajax_parameter');
-        if (empty($this->configValue('twack_ajax_activate'))) {
-            return false;
-        }
-
-        if (empty($ajaxParameterKey) || (empty($_GET[$ajaxParameterKey]) && empty($_POST[$ajaxParameterKey]))) {
+        // Processwire core-function which checks wether its an ajax call
+        if (!Twack::isAjax()) {
             return false;
         }
 
@@ -430,117 +413,6 @@ class Twack extends WireData implements Module, ConfigurableModule {
         return $this->services[$servicename];
     }
 
-    /**
-     * Transfers a value from $_POST to wire('input')->whitelist after applying sanitizers to it.
-     * @param  string  $key      	(i.e. $_POST[$key])
-     * @param  string  $sanitizer 	name of the sanitizer-function, which should be applyed. For a list of all possible sanitizers see https://processwire.com/api/variables/sanitizer/
-     * @return Sanitzed value
-     */
-    public function parameterToWhitelist($key, $sanitizer = 'text', $sanitizerOptions = array(), $sanitizerOptions2 = array()) {
-        $value = wire('input')->post($key);
-        if (empty($value)) {
-            $value = wire('input')->get($key);
-        }
-
-        if (is_string($sanitizer) && !empty($sanitizer) && method_exists(wire('sanitizer'), $sanitizer)) {
-            if (!empty($sanitizerOptions) && !empty($sanitizerOptions2)) {
-                $value = wire('sanitizer')->{$sanitizer}($value, $sanitizerOptions, $sanitizerOptions2);
-            } elseif (!empty($sanitizerOptions)) {
-                $value = wire('sanitizer')->{$sanitizer}($value, $sanitizerOptions);
-            } else {
-                $value = wire('sanitizer')->{$sanitizer}($value);
-            }
-        }
-        wire('input')->whitelist($key, $value);
-    }
-
-    /**
-     * Handles an ajax-call
-     */
-    public function ajaxCall() {
-        try {
-            $this->parameterToWhitelist('action', 'name');
-            if (wire('input')->whitelist('action') === 'getComponent') {
-                // Call a special component for its Ajax-Output
-                $this->parameterToWhitelist('page', 'id');
-                $this->parameterToWhitelist('directory', 'pagePathName');
-                $this->parameterToWhitelist('dir', 'pagePathName'); // Alias for directory
-                $this->parameterToWhitelist('componentType', 'name');
-                $this->parameterToWhitelist('type', 'name'); // Alias for componentType
-                $this->parameterToWhitelist('component', 'varName');
-
-                $args = wire('input')->post('args');
-                if (empty($args)) {
-                    $args = wire('input')->get('args');
-                }
-
-                $args['page'] = wire('page');
-                if (!empty(wire('input')->whitelist('page'))) {
-                    $args['page'] = wire('pages')->get('id=' . wire('input')->whitelist('page'));
-                }
-
-                $args['directory'] = '';
-                if (!empty(wire('input')->whitelist('directory'))) {
-                    $args['directory'] = wire('input')->whitelist('directory');
-                } elseif (!empty(wire('input')->whitelist('dir'))) {
-                    $args['directory'] = wire('input')->whitelist('dir');
-                }
-
-                $args['componentType'] = 'component';
-                if (!empty(wire('input')->whitelist('componentType'))) {
-                    $args['componentType'] = wire('input')->whitelist('componentType');
-                } elseif (!empty(wire('input')->whitelist('type'))) {
-                    $args['componentType'] = wire('input')->whitelist('type');
-                }
-
-                $component = $this->getNewComponent(
-                    wire('input')->whitelist('component'),
-                    $args
-                );
-
-                if ($component instanceof TwackNullComponent) {
-                    throw new TwackAjaxException('The requested component could not be initialized.');
-                }
-
-                if ($this->forcePlainAjaxOutput) {
-                    return $component->getAjax();
-                }
-                Twack::sendResponse($component->getAjax(), 200);
-            }
-
-            throw new TwackAjaxException('The requested action could not be completed.', array(), 405);
-        } catch (TwackAjaxException $e) {
-            if ($this->forcePlainAjaxOutput) {
-                throw $e;
-            }
-            Twack::sendResponse(array(
-                'message' => $e->getMessage(),
-                'data'    => $e->additionalData
-            ), $e->getCode());
-        } catch (TwackException $e) {
-            if ($this->forcePlainAjaxOutput) {
-                throw $e;
-            }
-            Twack::sendResponse(array(
-                'message' => $e->getMessage()
-            ), $e->getCode());
-        } catch (\Exception $e) {
-            if ($this->forcePlainAjaxOutput) {
-                throw $e;
-            }
-            Twack::sendResponse(array(
-                'message' => $e->getMessage()
-            ), 400);
-        }
-
-        if ($this->forcePlainAjaxOutput) {
-            throw new TwackAjaxException('A mysterious and unknown error appeared and could not be solved.', 400);
-        }
-        Twack::sendResponse(array(
-            'message' => 'A mysterious and unknown error appeared and could not be solved.'
-        ), 400);
-    }
-
     /*
      *************************************************
      * Helpers
@@ -788,5 +660,79 @@ class Twack extends WireData implements Module, ConfigurableModule {
 
         echo $body;
         exit();
+    }
+
+        /**
+     * Helper function, to convert common PHP-Objects to arrays which can be output in ajax.
+     * @param  Object $content
+     * @return array
+     */
+    public static function getAjaxOf($content) {
+        $output = array();
+
+        if ($content instanceof PageFiles) {
+            foreach ($content as $file) {
+                $output[] = self::getAjaxOf($file);
+            }
+        } elseif ($content instanceof PageFile) {
+            $output = array(
+                'basename'     => $content->basename,
+                'name'         => $content->name,
+                'description'  => $content->description,
+                'created'      => $content->created,
+                'modified'     => $content->modified,
+                'filesize'     => $content->filesize,
+                'filesizeStr'  => $content->filesizeStr,
+                'page_id'      => $content->page->id,
+                'ext'          => $content->ext
+            );
+
+            if ($content instanceof PageImage) {
+                $output['basename_mini']          = $content->size(600, 0)->basename;
+                $output['width']                  = $content->width;
+                $output['height']                 = $content->height;
+                $output['dimension_ratio']        = round($content->width / $content->height, 2);
+
+                if ($content->original) {
+                    $output['original'] = [
+                        'basename'      => $content->original->basename,
+                        'name'          => $content->original->name,
+                        'filesize'      => $content->original->filesize,
+                        'filesizeStr'   => $content->original->filesizeStr,
+                        'ext'           => $content->original->ext,
+                        'width'         => $content->original->width,
+                        'height'        => $content->original->height,
+                        'dimension_ratio' => round($content->original->width / $content->original->height, 2)
+                    ];
+                }
+            }
+
+            // Output custom filefield-values (since PW 3.0.142)
+            $fieldValues = $content->get('fieldValues');
+            if(!empty($fieldValues) && is_array($fieldValues)){
+                foreach($fieldValues as $key => $value){
+                    $output[$key] = $value;
+                }
+            }
+        } elseif ($content instanceof Template && $content->id) {
+            $output = array(
+                'id'    => $content->id,
+                'name'  => $content->name,
+                'label' => $content->label
+            );
+        } elseif ($content instanceof Page && $content->id) {
+            $output = array(
+                'id'       => $content->id,
+                'name'     => $content->name,
+                'title'    => $content->title,
+                'created'  => $content->created,
+                'modified' => $content->modified,
+                'url'      => $content->url,
+                'httpUrl'  => $content->httpUrl,
+                'template' => self::getAjaxOf($content->template)
+            );
+        }
+
+        return $output;
     }
 }

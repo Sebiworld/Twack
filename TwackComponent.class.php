@@ -217,7 +217,7 @@ class TwackComponent extends WireData {
             if (isset($args['throwErrors']) && $args['throwErrors'] === true) {
                 throw $e;
             }
-            return new TwackNullComponent(['backtrace' => (isset($args['backtrace']) ? $args['backtrace'] : debug_backtrace()), 'fehler' => $e->getMessage()]);
+            return new TwackNullComponent(['backtrace' => (isset($args['backtrace']) ? $args['backtrace'] : debug_backtrace()), 'error' => $e->getMessage()]);
         }
     }
 
@@ -473,8 +473,8 @@ class TwackComponent extends WireData {
      * The ProcessWire page is accessible in the template via $this->page. The controller class can be called via $this->component in the view.
      * @return string  Either the content of the view or an error message is output.
      */
-    public function ___render() {
-        if ($this->twack->isTwackAjaxCall()) {
+    public function ___render($format = 'auto') {
+        if ($this->twack->isTwackAjaxCall() && $format !== 'html') {
             return $this->renderAjax();
         }
         return $this->renderView();
@@ -484,7 +484,7 @@ class TwackComponent extends WireData {
         return $this->render();
     }
 
-    public function renderAjax() {
+    public function ___renderAjax() {
         $ajax    = $this->getAjax();
         $output = array();
         if (is_array($ajax)) {
@@ -493,90 +493,22 @@ class TwackComponent extends WireData {
             $output['value'] = (string) $ajax;
         }
 
-        if ($this->twack->forcePlainAjaxOutput) {
-            return json_encode($output);
-        }
-        Twack::sendResponse(200, json_encode($output), 'application/json');
+        return json_encode($output);
     }
 
     /**
      * Returns an output of the component as a PHP array that can be converted for the Ajax output.
      */
-    public function getAjax() {
+    public function getAjax($ajaxArgs = []) {
         return array();
     }
 
     /**
-     * Helper function, to convert common PHP-Objects to arrays which can be output in ajax.
+     * Helper function, to convert common Processwire-Objects to arrays which can be output in ajax.
      * @param  Object $content
      * @return array
      */
     public function getAjaxOf($content) {
-        $output = array();
-
-        if ($content instanceof PageFiles) {
-            foreach ($content as $file) {
-                $output[] = $this->getAjaxOf($file);
-            }
-        } elseif ($content instanceof PageFile) {
-            $output = array(
-                'basename'     => $content->basename,
-                'name'         => $content->name,
-                'description'  => $content->description,
-                'created'      => $content->created,
-                'modified'     => $content->modified,
-                'filesize'     => $content->filesize,
-                'filesizeStr'  => $content->filesizeStr,
-                'page_id'      => $content->page->id,
-                'ext'          => $content->ext
-            );
-
-            if ($content instanceof PageImage) {
-                $output['basename_mini']          = $content->size(600, 0)->basename;
-                $output['width']                  = $content->width;
-                $output['height']                 = $content->height;
-                $output['dimension_ratio']        = round($content->width / $content->height, 2);
-
-                if ($content->original) {
-                    $output['original'] = [
-                        'basename'      => $content->original->basename,
-                        'name'          => $content->original->name,
-                        'filesize'      => $content->original->filesize,
-                        'filesizeStr'   => $content->original->filesizeStr,
-                        'ext'           => $content->original->ext,
-                        'width'         => $content->original->width,
-                        'height'        => $content->original->height,
-                        'dimension_ratio' => round($content->original->width / $content->original->height, 2)
-                    ];
-                }
-            }
-
-            // Output custom filefield-values (since PW 3.0.142)
-            $fieldValues = $content->get('fieldValues');
-            if(!empty($fieldValues) && is_array($fieldValues)){
-                foreach($fieldValues as $key => $value){
-                    $output[$key] = $value;
-                }
-            }
-        } elseif ($content instanceof Template && $content->id) {
-            $output = array(
-                'id'    => $content->id,
-                'name'  => $content->name,
-                'label' => $content->label
-            );
-        } elseif ($content instanceof Page && $content->id) {
-            $output = array(
-                'id'       => $content->id,
-                'name'     => $content->name,
-                'title'    => $content->title,
-                'created'  => $content->created,
-                'modified' => $content->modified,
-                'url'      => $content->url,
-                'httpUrl'  => $content->httpUrl,
-                'template' => $this->getAjaxOf($content->template)
-            );
-        }
-
-        return $output;
+        return Twack::getAjaxOf($content);
     }
 }

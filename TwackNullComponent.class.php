@@ -15,7 +15,7 @@ class TwackNullComponent extends TwackComponent {
 		return false;
 	}
 
-	public function ___render() {
+	public function ___render($format = 'auto') {
 		return '';
 	}
 }

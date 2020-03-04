@@ -156,6 +156,8 @@ class TwackControl extends WireData {
 			throw new TwackException('getNewComponent(): No valid componentname. A componentname has to be a string an may not be empty.');
 		}
 
+		$logging = !isset($args['logging']) || !!$args['logging'];
+
 		$componentname = Twack::underscoreToUpperCamelCase($componentname);
 
 		$resultComponent = new TwackNullComponent(['backtrace' => (isset($args['backtrace']) ? $args['backtrace'] : debug_backtrace())]);
@@ -216,11 +218,15 @@ class TwackControl extends WireData {
 					if (isset($args['errorClass']) && $args['errorClass'] instanceof Exception) {
 						$e = $args['errorClass'];
 					}
-					Twack::devEcho($e->getMessage());
+                    if ($logging) {
+                        Twack::devEcho($e->getMessage());
+                    }
 					throw $e;
 				}
 			} else {
-				Twack::devEcho($e->getMessage());
+				if ($logging) {
+					Twack::devEcho($e->getMessage());
+				}
 				throw $e;
 			}
 		}
