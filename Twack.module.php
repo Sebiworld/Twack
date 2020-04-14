@@ -9,7 +9,8 @@ use \Exception;
  *
  * @author Sebastian Schendel
  */
-class Twack extends WireData implements Module, ConfigurableModule {
+class Twack extends WireData implements Module, ConfigurableModule
+{
     // Global namespace
     // Could be replaced with an other namespace to prevent classname-conflicts.
     const TEMPLATENAMESPACE = '\\ProcessWire\\';
@@ -40,7 +41,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
     /**
      * @internal
      */
-    public static function getModuleInfo() {
+    public static function getModuleInfo()
+    {
         return array(
             'title'    => 'Twack',
             'author'   => 'Sebastian Schendel',
@@ -56,7 +58,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
     /**
      * @internal
      */
-    public function getModuleConfigArray() {
+    public function getModuleConfigArray()
+    {
         return array(
             'twack_components_directory' => array(
                 'type'        => 'text',
@@ -88,7 +91,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
         );
     }
 
-    public function __construct() {
+    public function __construct()
+    {
         require_once 'Exceptions.php';
         require_once 'TwackComponent.class.php';
         require_once 'TwackNullComponent.class.php';
@@ -96,7 +100,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
         require_once 'DevEchoComponent.class.php';
     }
 
-    public function init() {
+    public function init()
+    {
         $this->addHookBefore('Page::render', $this, 'hookBeforePageRender');
     }
 
@@ -105,22 +110,26 @@ class Twack extends WireData implements Module, ConfigurableModule {
      *
      * @param  HookEvent $e
      */
-    public function hookBeforePageRender(HookEvent $e) {
+    public function hookBeforePageRender(HookEvent $e)
+    {
         $page = $e->object;
         if (!$this->isTwackAjaxCall()) {
             return;
         }
     }
 
-    public function enableAjaxResponse(){
+    public function enableAjaxResponse()
+    {
         $this->forceAjax = true;
     }
 
-    public function disableAjaxResponse(){
+    public function disableAjaxResponse()
+    {
         $this->forceAjax = false;
     }
 
-    public function isTwackAjaxCall() {
+    public function isTwackAjaxCall()
+    {
         if ($this->forceAjax) {
             return true;
         }
@@ -133,7 +142,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
         return true;
     }
 
-    public static function getManifest() {
+    public static function getManifest()
+    {
         if (is_array(self::$manifest)) {
             return self::$manifest;
         }
@@ -167,7 +177,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
         return self::$manifest;
     }
 
-    public static function getManifestFilename($originalFilename) {
+    public static function getManifestFilename($originalFilename)
+    {
         if (!isset(self::getManifest()[$originalFilename])) {
             return $originalFilename;
         }
@@ -180,7 +191,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * Provides the current instance of TwackControl.
      * @return TwackControl
      */
-    protected function getControl() {
+    protected function getControl()
+    {
         // TwackControl is a singleton. If an instance is already created, it can be returned directly:
         if ($this->control) {
             return $this->control;
@@ -242,7 +254,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * Owerwrites currently used instance of TwackControl.
      * @param TwackControl $control
      */
-    public function setControl(TwackControl $control) {
+    public function setControl(TwackControl $control)
+    {
         $this->control = $control;
     }
 
@@ -251,7 +264,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @param  string $componentname
      * @param  array  $args
      */
-    public function requireComponent($componentname, $args = array()) {
+    public function requireComponent($componentname, $args = array())
+    {
         return $this->getControl()->getPathsForComponent($componentname, $args = array());
     }
 
@@ -262,7 +276,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @param  $wert (optional) new value for the field
      * @return value
      */
-    private function configValue($key, $value = null) {
+    private function configValue($key, $value = null)
+    {
         $configdata = wire('modules')->getModuleConfigData('Twack');
 
         if (!isset($configdata[$key])) {
@@ -282,7 +297,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * Returns a global Twack-parameter. Every component has access to these parameters and can do changes to them.
      * @internal
      */
-    public function getGlobalParameter($parametername = null) {
+    public function getGlobalParameter($parametername = null)
+    {
         if (!empty($parametername)) {
             if (isset($this->parameters[$parametername])) {
                 return $this->parameters[$parametername];
@@ -295,7 +311,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * Returns all globally set parameters.
      * @return array
      */
-    public function getGlobalParameters() {
+    public function getGlobalParameters()
+    {
         return $this->parameters;
     }
 
@@ -305,7 +322,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @internal
      * @deprecated
      */
-    public function addGlobalParameters(array $parameters) {
+    public function addGlobalParameters(array $parameters)
+    {
         $this->parameters = array_merge($this->parameters, $parameters);
     }
 
@@ -318,7 +336,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      *
      * @return boolean
      */
-    public function addComponentAlias($aliasname, $componentname, $args = array()) {
+    public function addComponentAlias($aliasname, $componentname, $args = array())
+    {
         return $this->getControl()->addComponentAlias($aliasname, $componentname, $args);
     }
 
@@ -326,9 +345,10 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * Returns the original name of the component from an alias-name. Aliases must be added via addComponentAlias().
      *
      * @param  string $aliasname
-     * @return string|null 	Classname of the original component or NULL if the alias does not exist.
+     * @return string|null  Classname of the original component or NULL if the alias does not exist.
      */
-    public function getComponentnameForAlias($aliasname) {
+    public function getComponentnameForAlias($aliasname)
+    {
         return $this->getControl()->getComponentnameForAlias($aliasname);
     }
 
@@ -338,17 +358,19 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @param  string $aliasname
      * @return array|null  Array of arguments or NULL, if alias does not exist.
      */
-    public function getComponentArgsForAlias($aliasname) {
+    public function getComponentArgsForAlias($aliasname)
+    {
         return $this->getControl()->getComponentArgsForAlias($aliasname);
     }
 
     /**
      * Registers a component-object for global use. Global components can be called anywhere in the code via TwackObject->getComponent()
      *
-     * @param TwackComponent 	$component  	Classname of the component which should be globalized.
-     * @param string 			$globalName 	Global name, under which the component can be accessed.
+     * @param TwackComponent    $component      Classname of the component which should be globalized.
+     * @param string            $globalName     Global name, under which the component can be accessed.
      */
-    public function makeComponentGlobal(TwackComponent $component, $globalName) {
+    public function makeComponentGlobal(TwackComponent $component, $globalName)
+    {
         if (!is_string($globalName) || empty($globalName)) {
             throw new TwackException('No global name set. You have to set the $globalName (second parameter) for the component, under which it will be accessable globally.');
         }
@@ -359,10 +381,11 @@ class Twack extends WireData implements Module, ConfigurableModule {
     /**
      * Returns a global component. It has to be globalized previously via TwackModule->makeComponentGlobal().
      *
-     * @param  string $globalName 					Global name, under which the component can be accessed.
-     * @return TwackComponent|TwackNullComponent 	Returns the requested TwackComponent or TwackNullComponent, if the global component could not be found.
+     * @param  string $globalName                   Global name, under which the component can be accessed.
+     * @return TwackComponent|TwackNullComponent    Returns the requested TwackComponent or TwackNullComponent, if the global component could not be found.
      */
-    public function getComponent($globalName) {
+    public function getComponent($globalName)
+    {
         if (!isset($this->globalComponents[$globalName])) {
             return new TwackNullComponent();
         }
@@ -372,23 +395,24 @@ class Twack extends WireData implements Module, ConfigurableModule {
     /**
      * Returns a new TwackComponent-object for the requested classname.
      *
-     * @param string $componentname 		Classname (or alias) of the requested component.
-     * @param array $args 					Additional arguments, which should be passed to the component-object.
-     *                     	   				You can pass all custom values and the following predefined arguments to
-     *                     	   				influence the component's behaviour:
-     *                             				page           	Page, which should be used in the component
-     *                             								(Default: NULL, which results in passing the page of
-     *                             								the calling component or wire('page')).
-     *                                     		parameters      Parameters, which will be accessable in the component
-     *                                     						via $this->[parameterkey] (Default: array())
+     * @param string $componentname         Classname (or alias) of the requested component.
+     * @param array $args                   Additional arguments, which should be passed to the component-object.
+     *                                      You can pass all custom values and the following predefined arguments to
+     *                                      influence the component's behaviour:
+     *                                          page            Page, which should be used in the component
+     *                                                          (Default: NULL, which results in passing the page of
+     *                                                          the calling component or wire('page')).
+     *                                          parameters      Parameters, which will be accessable in the component
+     *                                                          via $this->[parameterkey] (Default: array())
      *                                          directory       Where can the component be found? Base is the components-folder.
-     *                                          globalName		Makes the new component globally accessable.
+     *                                          globalName      Makes the new component globally accessable.
      *
      * @throws TwackException
      * @throws ComponentNotFoundException
      * @return TwackComponent
      */
-    public function getNewComponent($componentname, $args = array()) {
+    public function getNewComponent($componentname, $args = array())
+    {
         if (!isset($args['backtrace'])) {
             $args['backtrace'] = debug_backtrace();
         }
@@ -405,7 +429,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @param  string $servicename
      * @return TwackComponent
      */
-    public function getService($servicename) {
+    public function getService($servicename)
+    {
         if (!isset($this->services[$servicename])) {
             // The service was not initialized yet. Search it and save it for later calls.
             $this->services[$servicename] = $this->getNewComponent($servicename, array('componentType' => 'service'));
@@ -422,14 +447,16 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * Ensures that there is a separator at the end of a path-string
      * @param string $path
      */
-    public static function addTrailingSeparator($path) {
+    public static function addTrailingSeparator($path)
+    {
         if (is_string($path) && strlen($path) > 0 && substr($path, -1) != DIRECTORY_SEPARATOR) {
             $path .= DIRECTORY_SEPARATOR;
         }
         return $path;
     }
 
-    public static function addLeadingSeparator($path) {
+    public static function addLeadingSeparator($path)
+    {
         if (is_string($path) && strlen($path) > 0 && substr($path, 0, 1) != DIRECTORY_SEPARATOR) {
             $path = DIRECTORY_SEPARATOR . $path;
         }
@@ -438,29 +465,32 @@ class Twack extends WireData implements Module, ConfigurableModule {
 
     /**
      * Transforms a CamelCaseString to an under_score_string
-     * @param string $str 	String in camelcase-format
-     * @return string  		Translated into underscore-format
+     * @param string $str   String in camelcase-format
+     * @return string       Translated into underscore-format
      */
-    public static function camelCaseToUnderscore($camelCaseString) {
+    public static function camelCaseToUnderscore($camelCaseString)
+    {
         $camelCaseString[0] = strtolower($camelCaseString[0]);
         return strtolower(preg_replace(['/([a-z\d])([A-Z])/', '/([^_])([A-Z][a-z])/'], '$1_$2', $camelCaseString));
     }
 
     /**
      * Transforms an under_score_string to a CamelCaseString (Upper)
-     * @param  string $underscoreString  	String in underscore-format
-     * @return string                		Translated into camelcase-format
+     * @param  string $underscoreString     String in underscore-format
+     * @return string                       Translated into camelcase-format
      */
-    public static function underscoreToUpperCamelCase($underscoreString) {
+    public static function underscoreToUpperCamelCase($underscoreString)
+    {
         return self::underscoreToCamelCase($underscoreString, true);
     }
 
     /**
      * Transforms an under_score_string to a camelCaseString (Lower)
-     * @param  string $underscoreString  	String in underscore-format
-     * @return string                		Translated into camelcase-format
+     * @param  string $underscoreString     String in underscore-format
+     * @return string                       Translated into camelcase-format
      */
-    public static function underscoreToLowerCamelCase($underscoreString) {
+    public static function underscoreToLowerCamelCase($underscoreString)
+    {
         return self::underscoreToCamelCase($underscoreString, false);
     }
 
@@ -473,7 +503,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @param bool $capitalise_first_char If true, capitalise the first char in $str
      * @return string $str translated into camel caps
      */
-    public static function underscoreToCamelCase($str, $capitalizeFirstCharacter = false) {
+    public static function underscoreToCamelCase($str, $capitalizeFirstCharacter = false)
+    {
         if (!$capitalizeFirstCharacter) {
             $str = lcfirst($str);
         }
@@ -487,18 +518,20 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @param  string $path
      * @return string classname.
      */
-    public static function getClassnameFromPath($path) {
+    public static function getClassnameFromPath($path)
+    {
         return Twack::underscoreToUpperCamelCase(basename($path, '.class.php'));
     }
 
     /**
      * Shortens a text to a characterlimit, but splits between complete words.
-     * @param  string  $str   	Text that should be shortened
-     * @param  integer $limit  	Maximum count of characters (default: 120)
-     * @param  string  $endstr 	Suffix which will be added to a shortened string (default: '…')
-     * @return string 			Returns the shortened string with suffix
+     * @param  string  $str     Text that should be shortened
+     * @param  integer $limit   Maximum count of characters (default: 120)
+     * @param  string  $endstr  Suffix which will be added to a shortened string (default: '…')
+     * @return string           Returns the shortened string with suffix
      */
-    public static function wordLimiter($str, $limit = 120, $endstr = '…') {
+    public static function wordLimiter($str, $limit = 120, $endstr = '…')
+    {
         $str = strip_tags($str);
         if (strlen($str) <= $limit) {
             return $str;
@@ -516,7 +549,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * Registers a custom DevEchoComponent, which handles all Twack::devEcho()-outputs. If no custom component is defined the devEcho()-outputs will be rendered before the site's contents in <pre>-tags.
      * @param  DevEchoComponent $component
      */
-    public function registerDevEchoComponent(DevEchoComponent $component) {
+    public function registerDevEchoComponent(DevEchoComponent $component)
+    {
         self::$devEchoComponent = $component;
     }
 
@@ -524,7 +558,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * Returns the currently registered DevEchoComponent
      * @return DevEchoComponent
      */
-    public static function getDevEchoComponent() {
+    public static function getDevEchoComponent()
+    {
         if (self::$devEchoComponent && self::$devEchoComponent instanceof DevEchoComponent) {
             return self::$devEchoComponent;
         }
@@ -544,7 +579,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
     /**
      * Outputs custom dev-outputs for development purposes. Twack::devEcho()-outputs will only be rendered if a superuser is logged in and the call is not an ajax-call.
      */
-    public static function devEcho() {
+    public static function devEcho()
+    {
         if (!wire('user')->isSuperuser() || self::isAjax()) {
             return;
         }
@@ -579,7 +615,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
         }
     }
 
-    public static function isAjax() {
+    public static function isAjax()
+    {
         return wire('config')->ajax;
     }
 
@@ -589,7 +626,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @param  int $status
      * @return string
      */
-    protected static function getStatusCodeMessage($status) {
+    protected static function getStatusCodeMessage($status)
+    {
         $codes = array(
             100 => 'Continue',
             101 => 'Switching Protocols',
@@ -640,12 +678,13 @@ class Twack extends WireData implements Module, ConfigurableModule {
     /**
      * Outputs a given body with explicitly set HTTP-headers and exits after it.
      *
-     * @param  string  $body         	Content which should be outputted. If an array is given,
-     *                                 	application/json will be chosen as contentType automatically.
-     * @param  integer $status       	HTTP-statuscode (Default: 200 ->ok)
-     * @param  string  $contentType 	ContentType (i.e. 'text/html' or 'application/json')
+     * @param  string  $body            Content which should be outputted. If an array is given,
+     *                                  application/json will be chosen as contentType automatically.
+     * @param  integer $status          HTTP-statuscode (Default: 200 ->ok)
+     * @param  string  $contentType     ContentType (i.e. 'text/html' or 'application/json')
      */
-    public static function sendResponse($body = '', $status = 200, $contentType = 'text/html') {
+    public static function sendResponse($body = '', $status = 200, $contentType = 'text/html')
+    {
         $statusHeader = 'HTTP/1.1 ' . $status . ' ' . self::getStatusCodeMessage($status);
         header($statusHeader);
 
@@ -667,7 +706,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
      * @param  Object $content
      * @return array
      */
-    public static function getAjaxOf($content) {
+    public static function getAjaxOf($content)
+    {
         $output = array();
 
         if ($content instanceof PageFiles) {
@@ -709,8 +749,8 @@ class Twack extends WireData implements Module, ConfigurableModule {
 
             // Output custom filefield-values (since PW 3.0.142)
             $fieldValues = $content->get('fieldValues');
-            if(!empty($fieldValues) && is_array($fieldValues)){
-                foreach($fieldValues as $key => $value){
+            if (!empty($fieldValues) && is_array($fieldValues)) {
+                foreach ($fieldValues as $key => $value) {
                     $output[$key] = $value;
                 }
             }
@@ -720,6 +760,10 @@ class Twack extends WireData implements Module, ConfigurableModule {
                 'name'  => $content->name,
                 'label' => $content->label
             );
+        } elseif ($content instanceof PageArray) {
+            foreach ($content as $page) {
+                $output[] = self::getAjaxOf($page);
+            }
         } elseif ($content instanceof Page && $content->id) {
             $output = array(
                 'id'       => $content->id,
