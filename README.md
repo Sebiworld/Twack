@@ -540,7 +540,9 @@ In the input "**TwackControl**", you can give an alternative TwackControl-class,
 
 Additionally, it is possible to give Twack the path to a **manifest.json**-file, which holds the real locations for your asset-files. I normalally use frontend-workflows, that generate optimized and minified asset-files for me. Typically I let the workflow generate distribution-files, that have a unique hash in their filenames, what prevents the browser to load outdated files. But I shurely don't want to paste these hashed-filenames in my code everytime I do a rebuild. Twack can use the path to my [manifest.json](https://github.com/Sebiworld/musical-fabrik.de/blob/master/site/templates/assets/manifest.json)-file, that is generated at every asset-rebuild. Look at my this [webpack.json](https://github.com/Sebiworld/musical-fabrik.de/blob/master/webpack.config.js), that I does exactly this. To include my `main.js`file from `site/templates/assets/js/main-8f56bd9a.min.js`, I can use the following line in the view:
 
+```php
 <script src="<?= wire('config')->urls->templates; ?>assets/js/<?= Twack::getManifestFilename('main.js'); ?>"></script>
+```
 
 <a name="how-it-works"></a>
 
