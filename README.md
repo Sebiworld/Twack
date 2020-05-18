@@ -1,27 +1,63 @@
 # Twack
 
-**Reusable components for your [ProcessWire](https://processwire.com)-templates!** 
+**Reusable components for your [ProcessWire](https://processwire.com)-templates!**
 
-Welcome to Twack! Twack helps you build well-structured and maintainable ProcessWire-projects. Inspired by angular.
+Welcome to Twack! Twack helps you build well-structured and maintainable ProcessWire-projects. Inspired by [angular](https://angular.io).
 
-## Table Of Contents
+| ProcessWire-Module: | [https://modules.processwire.com/modules/twack/](https://modules.processwire.com/modules/twack/) |
+| ------------------: | ------------------------------------------------------------ |
+|      Support-Forum: | [https://processwire.com/talk/topic/23549-twack/](https://processwire.com/talk/topic/23549-twack/) |
+|         Repository: | [https://github.com/Sebiworld/Twack](https://github.com/Sebiworld/Twack) |
+
+<a name="features"></a>
 
 
 ## Features
-* Create **encapsulated** and **reusable** components
+
+* Create  **components** ! Twack components are designed for reusability and encapsulating a set of features for easy maintainability. They can handle hierarchical or recursive use (child components).
 * **Based on ProcessWire's core functionality and principles**
-* **Not exclusive** - use Twack components to extend existing templates. You don't have to rewrite everything!
 * **HTML- and Ajax-Views** - specify json output for ajax-requests
-* Define services that handle global data
+* Define **services**, that handle global data. Twack manages the shared service-classes (->singleton) for you and lets you access the data from everywhere you need it.
+* **Not exclusive** - use Twack components to extend existing templates. You don't have to rewrite everything!
+
+## Table Of Contents
+
+* [Features](#features)
+* [Installation](#installation)
+* [Usage](#usage)
+  * [Quickstart: Creating a component](#quickstart)
+  * [Naming conventions & component variants](#naming-conventions)
+  * [Component Parameters](#component-parameters)
+    * [directory](#component-parameters-directory)
+    * [page](#component-parameters-page)
+    * [parameters](#component-parameters-parameters)
+    * [viewname](#component-parameters-viewname)
+  * [Asset handling](#asset-handling)
+  * [Services](#services)
+  * [Named components](#named-components)
+  * [Global components](#global-componets)
+  * [Ajax-Output](#ajax-output)
+* [Configuration](#configuration)
+* [How it works](#how-it-works)
+* [Versioning](#versioning)
+* [License](#license)
+
+<a name="installation"></a>
 
 ## Installation
+
 Twack can be installed like every other module in ProcessWire. Check the following guide for detailed information: [How-To Install or Uninstall Modules](http://modules.processwire.com/install-uninstall/)
 
 The prerequisites are **PHP>=5.5.0** and a **ProcessWire version >=3.0.0**. However, this is also checked during the installation of the module. No further dependencies.
 
+<a name="usage"></a>
+
 ## Usage
 
+<a name="quickstart"></a>
+
 ### Quickstart: Creating a component
+
 Twack uses components to subdive the website into logical components. A typical component can stand for its own and has no dependencies, which make it reusable and easy to maintain. Most components consist of a controller and a view.
 
 If you have not already done so, create the `site/templates/components` directory. Here we will place all of our future components. Add a new file `hello_world.view.php` inside of the directory. Also create `site/templates/services` where all of our service classes will find a home.
@@ -78,7 +114,7 @@ namespace ProcessWire;
 
 class HelloWorld extends TwackComponent {
 	public function __construct($args) {
-		parent::__construct($args); 
+		parent::__construct($args);
 	}
 }
 ```
@@ -95,13 +131,13 @@ namespace ProcessWire;
 
 class HelloWorld extends TwackComponent {
 	public function __construct($args) {
-		parent::__construct($args); 
-		
+		parent::__construct($args);
+
 		$this->title = 'Hello World!';
 		if(isset($args['title'])) {
 			$this->title = $args['title'];
 		}
-		
+
 		// Add and initialise a child-component
 		$testChildArgs = [
 			'myTestValue'
@@ -131,7 +167,7 @@ namespace ProcessWire;
 	}
 	?>
 	<p>Lorem ipsum</p>
-	
+
 	<div class="children_wrapper">
 		<?php
 		foreach ($this->childComponents as $childComponent) {
@@ -146,10 +182,13 @@ As you see, we only show the title, if `$this->title` has a value. Under `$this-
 
 We now have created a basic Twack-component and you now the general concepts how Twack works. But Twack has are a lot of more great features that will emend and simplify your development process.
 
-### Naming conventions & component variants
-As you saw in my `HelloWorld`-example above, Twack requires class and file names to be in a fixed format. (Controller-) classnames need to be written in Upper-CamelCase. Every filename and directory is, contrary to classnames, required to be specified in underscore_notation. 
+<a name="naming-conventions"></a>
 
-Please make sure that your class names do not match the names of ProcessWire core or module classes. That's how you avoid name collisions in the ProcessWire namespace with already existing classes. 
+### Naming conventions & component variants
+
+As you saw in my `HelloWorld`-example above, Twack requires class and file names to be in a fixed format. (Controller-) classnames need to be written in Upper-CamelCase. Every filename and directory is, contrary to classnames, required to be specified in underscore_notation.
+
+Please make sure that your class names do not match the names of ProcessWire core or module classes. That's how you avoid name collisions in the ProcessWire namespace with already existing classes.
 
 If you need your component be available under another component name it can be useful to add an alias:
 
@@ -173,10 +212,16 @@ $myComponent = $twack->getNewComponent('HalloWelt');
 
 Every `HalloWelt` component will now have the title "Hallo Welt!" for default, while the `HelloWorld` components still have "Hello World!" as default. I recommend to not overstrain the alias functionality - finding the original component for an alias can take a while and make your code less readable.
 
+<a name="component-parameters"></a>
+
 ### Component Parameters
+
 You cannot only pass custom parameters to newly instanciated components. There are a few core-parameters that influence the component's behavior as well.
 
+<a name="component-parameters-directory"></a>
+
 #### directory
+
 ```php
 <?php
 namespace ProcessWire;
@@ -189,7 +234,7 @@ $myComponent = $twack->getNewComponent('PageTitleOutput', [
 
 Setting a value for the `directory`-parameter makes Twack to look for the component files under a different location. With the code above, we instruct Twack to initialise a `PageTitleOutput`-component which is located not under `site/templates/components/page_title_output/page_title_output.class.php` but under `site/templates/components/general/page_title_output/page_title_output.class.php`.
 
-The `directory`-path is relative to the components-directory, which is defined in the module-configuration. You can also set it to an empty string to instruct Twack to look for a component at the root-level. This is especially useful when you add a child-component that is not located in your parent components directory: 
+The `directory`-path is relative to the components-directory, which is defined in the module-configuration. You can also set it to an empty string to instruct Twack to look for a component at the root-level. This is especially useful when you add a child-component that is not located in your parent components directory:
 
 ```php
 <?php
@@ -197,15 +242,18 @@ namespace ProcessWire;
 
 class HelloWorld extends TwackComponent {
 	public function __construct($args) {
-		parent::__construct($args); 
-		
+		parent::__construct($args);
+
 		// Our "General"-component is located under site/templates/components/general/general.class.php:
-		$this->addComponent('General', ['location' => '']);
+		$this->addComponent('General', ['directory' => '']);
 	}
 }
 ```
 
+<a name="component-parameters-page"></a>
+
 #### page
+
 Each component has a ProcessWire page it is internally linked with. Per default that would be the page which was initially called by the user - the same as in wire('page'). You can access the component's page via `$this->page`:
 
 ```php
@@ -232,7 +280,10 @@ foreach(wire('pages')->find('template.name=newsitem') as $item){
 }
 ```
 
+<a name="component-parameters-parameters"></a>
+
 #### parameters
+
 When you pass custom values to the new component they will be available in the component constructor's `$args` array. You can work with these values and set them via `$this->my_value = $args['my_value'];` to a component-attribute that will be also accessable in the view. If you don't want to do any logic and validation with a custom value, you can set it as a component-attribute right in the initialisation step. Add a `parameters` array with your custom parameters, that should be available as a component attribute and in the view.
 
 ```php
@@ -249,7 +300,10 @@ $myComponent = $twack->getNewComponent('PageTitleOutput', [
 echo $myComponent->render();
 ```
 
+<a name="component-parameters-viewname"></a>
+
 #### viewname
+
 Even though I haven't needed it much in my components so far, it's possible to set a custom viewname. With this feature, you could for example initialise a component but say, that it should use a different view file than the default {class_name}.view.php.
 
 ```php
@@ -266,7 +320,10 @@ echo $myComponent->render();
 
 The example above would instruct the component to use the view `site/templates/components/general/page_title_output/only_description.view.php`.
 
+<a name="asset-handling"></a>
+
 ### Asset handling
+
 In former times, we created a central `main.css` and `main.js` file that contained collected style- and script-information for all page components. And for all components, that could be, but are not shown at the current page. That could lead to a big file with large proportions of unused code.
 
 Since __HTTP2__ we don't have any valid argument to keep on with strategy. We can speed up our site if we load multiple small files, because they will be loaded simultaniously. In addition, semantically splitted code allows us to reduce the weight of unused code as well. You only have to load the code which is really needed by a component.
@@ -302,21 +359,24 @@ If you still want to add an absolute url, use `true` for the second parameter:
 
 ```php
 $this->addStyle(
-	wire('config')->urls->templates . 'assets/css/bootstrap.min.css', 
+	wire('config')->urls->templates . 'assets/css/bootstrap.min.css',
 	true
 );
 ```
 
 This will add exactly the url you passed.
 
+<a name="services"></a>
+
 ### Services
+
 In a complex website, you may want to have a central place where you can define general functions and attributes that can be used by multiple components.
 
 Twack has a concept for this: __Services__! Every service class is a singleton that is globally managed by Twack. If multiple components ask for a service, they will all get the same instance. Services aren't meant to render anything, so they have no view.
 
 You can define your own service-classes in `site/templates/services/`. This path is configurable in the module's configuration.
 
-Here is, for example, a news service that can retrieve, sort and filter our newsitem-pages. 
+Here is, for example, a news service that can retrieve, sort and filter our newsitem-pages.
 
 ```php
 <?php
@@ -405,6 +465,8 @@ _site/templates/services/news\_service.class.php_
 
 We can call `$this->getService('NewsService');` in many components and then use the service's functions. Twack will look for the class in our services-directory and make a singleton-instance out of it. I think, to avoid name-conflicts with the "normal" components its a good convention to add "Service" as a suffix to every service-class.
 
+<a name="named-components"></a>
+
 ### Named components
 
 To add a child-component to your current component, you call `$this->addComponent();` and create a child-component instance which is accessable in `$this->childComponents`. These components are typically nameless components that will be outputted in a `for`-loop.
@@ -416,6 +478,8 @@ $this->addComponent('Tags', ['name' => 'tagcloud']);
 ```
 
 The argument `name` identifies our `Tags`-instance as a named child-component. A named component will not be added to `$this->childComponents`, but it is individually accessable via `$this->getComponent('tagcloud')`. You can add multiple named child-components. The name of the components is not dependent on the component's class name. You can choose any name you want.
+
+<a name="global-components"></a>
 
 ### Global components
 
@@ -429,12 +493,12 @@ namespace ProcessWire;
 
 class General extends TwackComponent {
 	public function __construct($args) {
-		parent::__construct($args); 
-		
+		parent::__construct($args);
+
 		$this->addComponent('Header', [
 			'globalName' => 'header'
 		]);
-		
+
 		$this->addComponent('Footer', [
 			'globalName' => 'footer'
 		]);
@@ -450,26 +514,45 @@ namespace ProcessWire;
 
 class ImageView extends TwackComponent {
 	public function __construct($args) {
-		parent::__construct($args); 
-		
+		parent::__construct($args);
+
 		$header = $this->getGlobalComponent('header');
 		$header->changeColorTo('green');
 	}
 }
 ```
 
+<a name="ajax-output"></a>
+
 ### Ajax-Output
 
 
 
+<a name="configuration"></a>
 
 ## Configuration
 
+![twack-configuration](./documentation/media/twack-configuration.png?raw=true)
+
+Twack allows you to change the **location** of the directories, where it looks for component- and service-classes. Change it to any location you like - they don't have to stay in your site/templates/ folder, if you want to have them somewhere else.
+
+In the input "**TwackControl**", you can give an alternative TwackControl-class, which handles the way Twack looks for components. I don't think, that it is necessary in most cases. But if you need to manipulate it, you should take a look at the core [TwackControl-class](https://github.com/Sebiworld/Twack/blob/master/TwackControl.class.php). Create your own class which extends the core-class, and paste the locaiton to the module's configuration.
+
+Additionally, it is possible to give Twack the path to a **manifest.json**-file, which holds the real locations for your asset-files. I normalally use frontend-workflows, that generate optimized and minified asset-files for me. Typically I let the workflow generate distribution-files, that have a unique hash in their filenames, what prevents the browser to load outdated files. But I shurely don't want to paste these hashed-filenames in my code everytime I do a rebuild. Twack can use the path to my [manifest.json](https://github.com/Sebiworld/musical-fabrik.de/blob/master/site/templates/assets/manifest.json)-file, that is generated at every asset-rebuild. Look at my this [webpack.json](https://github.com/Sebiworld/musical-fabrik.de/blob/master/webpack.config.js), that I does exactly this. To include my `main.js`file from `site/templates/assets/js/main-8f56bd9a.min.js`, I can use the following line in the view:
+
+<script src="<?= wire('config')->urls->templates; ?>assets/js/<?= Twack::getManifestFilename('main.js'); ?>"></script>
+
+<a name="how-it-works"></a>
+
 ## How It Works
+
+<a name="versioning"></a>
 
 ## Versioning
 
-We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/Sebiworld/Twack/tags). 
+We use [SemVer](http://semver.org/) for versioning. For the versions available, see the [tags on this repository](https://github.com/Sebiworld/Twack/tags).
+
+<a name="license"></a>
 
 ## License
 
