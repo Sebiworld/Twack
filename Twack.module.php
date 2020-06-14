@@ -46,7 +46,7 @@ class Twack extends WireData implements Module, ConfigurableModule
         return array(
             'title'    => 'Twack',
             'author'   => 'Sebastian Schendel',
-            'version'  => '2.1.2',
+            'version'  => '2.1.3',
             'summary'  => 'Reusable components for your ProcessWire-templates.',
             'singular' => true,
             'autoload' => true,
@@ -102,6 +102,7 @@ class Twack extends WireData implements Module, ConfigurableModule
 
     public function init()
     {
+        $this->wire('twack', $this);
         $this->addHookBefore('Page::render', $this, 'hookBeforePageRender');
     }
 

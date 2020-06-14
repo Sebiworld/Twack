@@ -30,7 +30,6 @@ class TwackControl extends WireData {
 			throw new TwackException('Required args not found: \'directory\' and \'path\' of services folder.');
 		}
 
-		$this->twack = wire('modules')->get('Twack');
 		$this->page = isset($args['page']) ? $args['page'] : wire('page');
 
 		$this->componentsDirectory = Twack::addTrailingSeparator($args['components']['directory']);
@@ -176,7 +175,7 @@ class TwackControl extends WireData {
 		if (!isset($args['parameters'])) {
 			$args['parameters'] = array();
 		}
-		$args['parameters'] = array_merge($this->twack->getGlobalParameters(), $args['parameters']);
+		$args['parameters'] = array_merge($this->wire('twack')->getGlobalParameters(), $args['parameters']);
 
 		try {
 			try {

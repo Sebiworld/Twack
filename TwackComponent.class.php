@@ -40,9 +40,6 @@ class TwackComponent extends WireData {
         }
         $this->setView($viewname);
 
-        // The module-instance will be available under $this->twack:
-        $this->twack = wire('modules')->get('Twack');
-
         // All child-components will be stored in $this->childComponents (unnamed) or in $this->namedComponents (components with a given key)
         $this->childComponents = new WireArray();
         $this->namedComponents = new WireArray();
@@ -210,7 +207,7 @@ class TwackComponent extends WireData {
                 $args['backtrace'] = debug_backtrace();
             }
 
-            $resultComponent = $this->twack->getNewComponent($componentname, $args);
+            $resultComponent = $this->wire('twack')->getNewComponent($componentname, $args);
 
             return $resultComponent;
         } catch (Exception $e) {
@@ -301,7 +298,7 @@ class TwackComponent extends WireData {
      * @return TwackComponent
      */
     public function getGlobalComponent($componentname) {
-        return $this->twack->getComponent($componentname);
+        return $this->wire('twack')->getComponent($componentname);
     }
 
     /**
@@ -310,7 +307,7 @@ class TwackComponent extends WireData {
      * @return TwackComponent
      */
     public function getService($servicename) {
-        return $this->twack->getService($servicename);
+        return $this->wire('twack')->getService($servicename);
     }
 
     /**
@@ -318,7 +315,7 @@ class TwackComponent extends WireData {
      * @internal
      */
     public function getGlobalParameter($parametername = null) {
-        return $this->twack->getGlobalParameter($parametername);
+        return $this->wire('twack')->getGlobalParameter($parametername);
     }
 
     /**
@@ -326,7 +323,7 @@ class TwackComponent extends WireData {
      * @return array
      */
     public function getGlobalParameters() {
-        return $this->twack->getGlobalParameters();
+        return $this->wire('twack')->getGlobalParameters();
     }
 
     /**
@@ -336,7 +333,7 @@ class TwackComponent extends WireData {
      * @deprecated
      */
     public function addGlobalParameters(array $parameters) {
-        $this->twack->addGlobalParameters($parameters);
+        $this->wire('twack')->addGlobalParameters($parameters);
     }
 
     /**
@@ -474,7 +471,7 @@ class TwackComponent extends WireData {
      * @return string  Either the content of the view or an error message is output.
      */
     public function ___render($format = 'auto') {
-        if ($this->twack->isTwackAjaxCall() && $format !== 'html') {
+        if ($this->wire('twack')->isTwackAjaxCall() && $format !== 'html') {
             return $this->renderAjax();
         }
         return $this->renderView();

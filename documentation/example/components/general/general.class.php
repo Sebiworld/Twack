@@ -10,7 +10,7 @@ class General extends TwackComponent {
 		$this->metatags = new WireData();
 
 		// This component should be available global under the keyword "general":
-		$this->twack->makeComponentGlobal($this, 'general');
+		$this->wire('twack')->makeComponentGlobal($this, 'general');
 
 		// Add vendor-styles:
 		$this->addStyle(wire('config')->urls->templates . 'assets/css/bootstrap.min.css', true);
@@ -34,7 +34,7 @@ class General extends TwackComponent {
 
 		// Register a custom DevEcho
 		$devEcho = $this->addComponent('CustomDevEcho', ['globalName' => 'dev_echo']);
-		$this->twack->registerDevEchoComponent($devEcho);
+		wire('twack')->registerDevEchoComponent($devEcho);
 
 		// Add layout-components, e.g.:
 		// $this->addComponent('PageHeader', ['globalName' => 'header']);

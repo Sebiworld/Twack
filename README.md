@@ -79,11 +79,8 @@ If we had a controller-class for our view, the class would be called `HelloWorld
 <?php
 namespace ProcessWire;
 
-// Get an instance of the Twack-module:
-$twack = wire('modules')->get('Twack');
-
 // Get a new instance of our HelloWorld-component:
-$myComponent = $twack->getNewComponent('HelloWorld');
+$myComponent = wire('twack')->getNewComponent('HelloWorld');
 ?>
 
 <html>
@@ -193,21 +190,19 @@ Please make sure that your class names do not match the names of ProcessWire cor
 If you need your component be available under another component name it can be useful to add an alias:
 
 ```php
-$module = wire('modules')->get('Twack');
-$module->addComponentAlias('HalloWelt', 'HelloWorld');
+wire('twack')->addComponentAlias('HalloWelt', 'HelloWorld');
 
 // Call for "HalloWelt", but get the "HelloWorld"-component:
-$myComponent = $twack->getNewComponent('HalloWelt');
+$myComponent = wire('twack')->getNewComponent('HalloWelt');
 ```
 
 This makes our `HelloWorld`-component also available under the component name `HalloWelt`. As an additional third parameter you can pass custom arguments to only the alias component.
 
 ```php
-$module = wire('modules')->get('Twack');
-$module->addComponentAlias('HalloWelt', 'HelloWorld', ['title' => 'Hallo Welt!']);
+wire('twack')->addComponentAlias('HalloWelt', 'HelloWorld', ['title' => 'Hallo Welt!']);
 
 // Call for "HalloWelt", but get the "HelloWorld"-component:
-$myComponent = $twack->getNewComponent('HalloWelt');
+$myComponent = wire('twack')->getNewComponent('HalloWelt');
 ```
 
 Every `HalloWelt` component will now have the title "Hallo Welt!" for default, while the `HelloWorld` components still have "Hello World!" as default. I recommend to not overstrain the alias functionality - finding the original component for an alias can take a while and make your code less readable.
@@ -226,8 +221,7 @@ You cannot only pass custom parameters to newly instanciated components. There a
 <?php
 namespace ProcessWire;
 
-$twack = wire('modules')->get('Twack');
-$myComponent = $twack->getNewComponent('PageTitleOutput', [
+$myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
 	'directory' => 'general'
 ]);
 ```
@@ -270,9 +264,8 @@ But you can also change the internally linked page. For example, if you want to 
 <?php
 namespace ProcessWire;
 
-$twack = wire('modules')->get('Twack');
 foreach(wire('pages')->find('template.name=newsitem') as $item){
-	$myComponent = $twack->getNewComponent('PageTitleOutput', [
+	$myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
 		'directory' => 'general',
 		'page' => $item
 	]);
@@ -290,8 +283,7 @@ When you pass custom values to the new component they will be available in the c
 <?php
 namespace ProcessWire;
 
-$twack = wire('modules')->get('Twack');
-$myComponent = $twack->getNewComponent('PageTitleOutput', [
+$myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
 	'directory' => 'general',
 	'parameters' => [
 		'showTitle' => false
@@ -310,8 +302,7 @@ Even though I haven't needed it much in my components so far, it's possible to s
 <?php
 namespace ProcessWire;
 
-$twack = wire('modules')->get('Twack');
-$myComponent = $twack->getNewComponent('PageTitleOutput', [
+$myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
 	'directory' => 'general',
 	'viewname' => 'OnlyDescription'
 ]);
@@ -532,7 +523,7 @@ class ImageView extends TwackComponent {
 
 ## Configuration
 
-![twack-configuration](./documentation/media/twack-configuration.png?raw=true)
+![twack-configuration](https://raw.githubusercontent.com/Sebiworld/Twack/master/documentation/media/twack-configuration.png)
 
 Twack allows you to change the **location** of the directories, where it looks for component- and service-classes. Change it to any location you like - they don't have to stay in your site/templates/ folder, if you want to have them somewhere else.
 
@@ -559,3 +550,10 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 ## License
 
 This project is licensed under the Mozilla Public License Version 2.0 - see the [LICENSE.md](LICENSE.md) file for details.
+
+## Changelog
+
+### Changes in 2.1.3 (2020-06-14)
+
+* Made Twack available as API-variable like `wire('twack')` . (Thanks to @BernhardBaumrock)
+
