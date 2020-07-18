@@ -38,7 +38,6 @@ Welcome to Twack! Twack helps you build well-structured and maintainable Process
   * [Global components](#global-componets)
   * [Ajax-Output](#ajax-output)
 * [Configuration](#configuration)
-* [How it works](#how-it-works)
 * [Versioning](#versioning)
 * [License](#license)
 * [Changelog](#changelog)
@@ -649,10 +648,6 @@ Additionally, it is possible to give Twack the path to a **manifest.json**-file,
 ```php
 <script src="<?= wire('config')->urls->templates; ?>assets/js/<?= Twack::getManifestFilename('main.js'); ?>"></script>
 ```
-
-<a name="how-it-works"></a>
-
-## How It Works
 
 <a name="versioning"></a>
 
