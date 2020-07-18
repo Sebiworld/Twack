@@ -85,15 +85,15 @@ $myComponent = wire('twack')->getNewComponent('HelloWorld');
 ?>
 
 <html>
-<head>
-	<title>Hello World!</title>
-</head>
-<body>
-	<?php
-	// Render the component`s view:
-	echo $myComponent->render();
-	?>
-</body>
+  <head>
+    <title>Hello World!</title>
+  </head>
+  <body>
+    <?php
+    // Render the component`s view:
+    echo $myComponent->render();
+    ?>
+  </body>
 </html>
 
 ```
@@ -111,9 +111,9 @@ A Twack-controller needs a bit of boilerplate-code to correctly function. Copy t
 namespace ProcessWire;
 
 class HelloWorld extends TwackComponent {
-	public function __construct($args) {
-		parent::__construct($args);
-	}
+  public function __construct($args) {
+    parent::__construct($args);
+  }
 }
 ```
 
@@ -128,20 +128,20 @@ An a little more advanced controller can look like this:
 namespace ProcessWire;
 
 class HelloWorld extends TwackComponent {
-	public function __construct($args) {
-		parent::__construct($args);
+  public function __construct($args) {
+    parent::__construct($args);
 
-		$this->title = 'Hello World!';
-		if(isset($args['title'])) {
-			$this->title = $args['title'];
-		}
+    $this->title = 'Hello World!';
+    if(isset($args['title'])) {
+      $this->title = $args['title'];
+    }
 
-		// Add and initialise a child-component
-		$testChildArgs = [
-			'myTestValue'
-		];
-		$this->addComponent('TestChild', $testChildArgs);
-	}
+    // Add and initialise a child-component
+    $testChildArgs = [
+      'myTestValue'
+    ];
+    $this->addComponent('TestChild', $testChildArgs);
+  }
 }
 ```
 
@@ -159,20 +159,20 @@ namespace ProcessWire;
 ?>
 
 <div class="hello_world_component">
-	<?php
-	if(!empty($this->showTitle)){
-		echo "<h2>{$this->showTitle}</h2>";
-	}
-	?>
-	<p>Lorem ipsum</p>
+  <?php
+  if(!empty($this->showTitle)){
+    echo "<h2>{$this->showTitle}</h2>";
+  }
+  ?>
+  <p>Lorem ipsum</p>
 
-	<div class="children_wrapper">
-		<?php
-		foreach ($this->childComponents as $childComponent) {
-			echo (string) $childComponent;
-		}
-		?>
-	</div>
+  <div class="children_wrapper">
+    <?php
+    foreach ($this->childComponents as $childComponent) {
+      echo (string) $childComponent;
+    }
+    ?>
+  </div>
 </div>
 ```
 
@@ -223,7 +223,7 @@ You cannot only pass custom parameters to newly instantiated components. There a
 namespace ProcessWire;
 
 $myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
-	'directory' => 'general'
+  'directory' => 'general'
 ]);
 ```
 
@@ -236,12 +236,12 @@ The `directory`-path is relative to the components-directory, which is defined i
 namespace ProcessWire;
 
 class HelloWorld extends TwackComponent {
-	public function __construct($args) {
-		parent::__construct($args);
+  public function __construct($args) {
+    parent::__construct($args);
 
-		// Our "General"-component is located under site/templates/components/general/general.class.php:
-		$this->addComponent('General', ['directory' => '']);
-	}
+    // Our "General"-component is located under site/templates/components/general/general.class.php:
+    $this->addComponent('General', ['directory' => '']);
+  }
 }
 ```
 
@@ -267,11 +267,11 @@ But you can also change the internally linked page. For example, if you want to 
 namespace ProcessWire;
 
 foreach(wire('pages')->find('template.name=newsitem') as $item){
-	$myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
-		'directory' => 'general',
-		'page' => $item
-	]);
-	echo $myComponent->render();
+  $myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
+    'directory' => 'general',
+    'page' => $item
+  ]);
+  echo $myComponent->render();
 }
 ```
 
@@ -286,10 +286,10 @@ When you pass custom values to the new component they will be available in the c
 namespace ProcessWire;
 
 $myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
-	'directory' => 'general',
-	'parameters' => [
-		'showTitle' => false
-	]
+  'directory' => 'general',
+  'parameters' => [
+    'showTitle' => false
+  ]
 ]);
 echo $myComponent->render();
 ```
@@ -305,8 +305,8 @@ Even though I haven't needed it much in my components so far, it's possible to s
 namespace ProcessWire;
 
 $myComponent = wire('twack')->getNewComponent('PageTitleOutput', [
-	'directory' => 'general',
-	'viewname' => 'OnlyDescription'
+  'directory' => 'general',
+  'viewname' => 'OnlyDescription'
 ]);
 echo $myComponent->render();
 ```
@@ -330,18 +330,18 @@ namespace ProcessWire;
 
 <html>
 <head>
-	<?php
-	foreach (wire('config')->styles as $stylefile) {
-		echo "\n\t<link rel='stylesheet' href='$stylefile' /> ";
-	}
-	?>
+  <?php
+  foreach (wire('config')->styles as $stylefile) {
+    echo "\n\t<link rel='stylesheet' href='$stylefile' /> ";
+  }
+  ?>
 </head>
 <body>
-	<?php
-	foreach (wire('config')->scripts as $scriptfile) {
-		echo "\n\t<script type='text/javascript' src='$scriptfile'></script>";
-	}
-	?>
+  <?php
+  foreach (wire('config')->scripts as $scriptfile) {
+    echo "\n\t<script type='text/javascript' src='$scriptfile'></script>";
+  }
+  ?>
 </body>
 </html>
 ```
@@ -352,8 +352,8 @@ If you still want to add an absolute url, use `true` for the second parameter:
 
 ```php
 $this->addStyle(
-	wire('config')->urls->templates . 'assets/css/bootstrap.min.css',
-	true
+  wire('config')->urls->templates . 'assets/css/bootstrap.min.css',
+  true
 );
 ```
 
@@ -376,81 +376,81 @@ Here is, for example, a news service that can retrieve, sort and filter our news
 namespace ProcessWire;
 
 class NewsService extends TwackComponent {
-	public function __construct($args) {
-		parent::__construct($args);
-	}
+  public function __construct($args) {
+    parent::__construct($args);
+  }
 
-	public function getNewsPage() {
-		return wire('pages')->get('template.name="newsroom"');
-	}
+  public function getNewsPage() {
+    return wire('pages')->get('template.name="newsroom"');
+  }
 
-	public function getArticles($args = array()) {
-		$output = new \StdClass();
-		$articles = $this->getNewsPage()->find('template=newsitem');
+  public function getArticles($args = array()) {
+    $output = new \StdClass();
+    $articles = $this->getNewsPage()->find('template=newsitem');
 
-		if (isset($args['sort'])) {
-			$articles->filter('sort=' . $args['sort']);
-		} else {
-			$articles->filter('sort=-date');
-		}
+    if (isset($args['sort'])) {
+      $articles->filter('sort=' . $args['sort']);
+    } else {
+      $articles->filter('sort=-date');
+    }
 
-		// Filter by Tags:
-		if (isset($args['tags'])) {
-			if (is_string($args['tags'])) {
-				$args['tags'] = explode(',', $args['tags']);
-			}
+    // Filter by Tags:
+    if (isset($args['tags'])) {
+      if (is_string($args['tags'])) {
+        $args['tags'] = explode(',', $args['tags']);
+      }
 
-			if (is_array($args['tags'])) {
-				$articles->filter('tags='.implode('|', $args['tags']));
-			}
-		}
+      if (is_array($args['tags'])) {
+        $articles->filter('tags='.implode('|', $args['tags']));
+      }
+    }
 
-		// Filter by search query:
-		if (isset($args['query'])) {
-			if (is_string($args['query'])) {
-				$query = wire('sanitizer')->text($args['query']);
-				$articles->filter("title|name|einleitung|inhalte.text%={$query}");
-			}
-		}
+    // Filter by search query:
+    if (isset($args['query'])) {
+      if (is_string($args['query'])) {
+        $query = wire('sanitizer')->text($args['query']);
+        $articles->filter("title|name|einleitung|inhalte.text%={$query}");
+      }
+    }
 
-		// Save the original count of all items before applying limit and offset:
-		$output->count = $articles->count;
+    // Save the original count of all items before applying limit and offset:
+    $output->count = $articles->count;
 
-		// Index of last element of the output:
-		$output->lastElementIndex = 0;
+    // Index of last element of the output:
+    $output->lastElementIndex = 0;
 
-		// Apply Limit and Offset:
-		$limitSelector = array();
+    // Apply Limit and Offset:
+    $limitSelector = array();
 
-		if (isset($args['start'])) {
-			$limitSelector[] = 'start=' . $args['start'];
-			$output->lastElementIndex = intval($args['start']);
-		} elseif (isset($args['offset'])) {
-			$limitSelector[] = 'start=' . $args['offset'];
-			$output->lastElementIndex = intval($args['offset']);
-		} else {
-			$limitSelector[] = 'start=0';
-		}
+    if (isset($args['start'])) {
+      $limitSelector[] = 'start=' . $args['start'];
+      $output->lastElementIndex = intval($args['start']);
+    } elseif (isset($args['offset'])) {
+      $limitSelector[] = 'start=' . $args['offset'];
+      $output->lastElementIndex = intval($args['offset']);
+    } else {
+      $limitSelector[] = 'start=0';
+    }
 
-		if (isset($args['limit']) && $args['limit'] >= 0) {
-			$limitSelector[] = 'limit=' . $args['limit'];
-			$output->lastElementIndex = $output->lastElementIndex + intval($args['limit']);
-		} elseif (!isset($args['limit'])) {
-			$limitSelector[] = 'limit=12';
-			$output->lastElementIndex = $output->lastElementIndex + 12;
-		}
+    if (isset($args['limit']) && $args['limit'] >= 0) {
+      $limitSelector[] = 'limit=' . $args['limit'];
+      $output->lastElementIndex = $output->lastElementIndex + intval($args['limit']);
+    } elseif (!isset($args['limit'])) {
+      $limitSelector[] = 'limit=12';
+      $output->lastElementIndex = $output->lastElementIndex + 12;
+    }
 
-		if (!empty($limitSelector)) {
-			$articles->filter(implode(', ', $limitSelector));
-		}
+    if (!empty($limitSelector)) {
+      $articles->filter(implode(', ', $limitSelector));
+    }
 
-		// Are there any more posts that can be downloaded?
-		$output->hasMore = $output->lastElementIndex + 1 < $output->count;
+    // Are there any more posts that can be downloaded?
+    $output->hasMore = $output->lastElementIndex + 1 < $output->count;
 
-		$output->articles = $articles;
+    $output->articles = $articles;
 
-		return $output;
-	}
+    return $output;
+  }
 }
 ```
 
@@ -485,17 +485,17 @@ But there are a few cases, in which you want to directly access and influence a 
 namespace ProcessWire;
 
 class General extends TwackComponent {
-	public function __construct($args) {
-		parent::__construct($args);
+  public function __construct($args) {
+    parent::__construct($args);
 
-		$this->addComponent('Header', [
-			'globalName' => 'header'
-		]);
+    $this->addComponent('Header', [
+      'globalName' => 'header'
+    ]);
 
-		$this->addComponent('Footer', [
-			'globalName' => 'footer'
-		]);
-	}
+    $this->addComponent('Footer', [
+      'globalName' => 'footer'
+    ]);
+  }
 }
 ```
 
@@ -506,12 +506,12 @@ You see, we have a global Header and a global Footer now. It could be useful to 
 namespace ProcessWire;
 
 class ImageView extends TwackComponent {
-	public function __construct($args) {
-		parent::__construct($args);
+  public function __construct($args) {
+    parent::__construct($args);
 
-		$header = $this->getGlobalComponent('header');
-		$header->changeColorTo('green');
-	}
+    $header = $this->getGlobalComponent('header');
+    $header->changeColorTo('green');
+  }
 }
 ```
 
@@ -572,22 +572,22 @@ You can also call child components in the `getAjax()` function to merge or nest 
 
 ```php
 class HelloWorld extends TwackComponent {
-	public function __construct($args) {
-		parent::__construct($args);
+  public function __construct($args) {
+    parent::__construct($args);
 
-		$this->title = 'Hello World!';
-		if(isset($args['title'])) {
-			$this->title = $args['title'];
-		}
+    $this->title = 'Hello World!';
+    if(isset($args['title'])) {
+      $this->title = $args['title'];
+    }
 
-		// Add and initialise a child-component
-		$testChildArgs = [
-			'myTestValue'
-		];
-		$this->addComponent('TestChild', $testChildArgs);
-	}
+    // Add and initialise a child-component
+    $testChildArgs = [
+      'myTestValue'
+    ];
+    $this->addComponent('TestChild', $testChildArgs);
+  }
 
-	public function getAjax($ajaxArgs = []) {
+  public function getAjax($ajaxArgs = []) {
     // Basic output: data of the current page:
     $output = $this->getAjaxOf($this->page);
 
