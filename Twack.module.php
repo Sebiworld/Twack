@@ -702,7 +702,7 @@ class Twack extends WireData implements Module, ConfigurableModule
         exit();
     }
 
-        /**
+    /**
      * Helper function, to convert common PHP-Objects to arrays which can be output in ajax.
      * @param  Object $content
      * @return array
