@@ -1,4 +1,5 @@
 <?php
+
 namespace ProcessWire;
 
 use \Exception;
@@ -7,7 +8,6 @@ use \Exception;
  * By implementing a subclass of TwackControl you can overwrite each method's behaviour, if necessary.
  */
 class TwackControl extends WireData {
-
 	protected $seite;
 
 	// Locations:
@@ -38,8 +38,8 @@ class TwackControl extends WireData {
 		$this->servicesDirectory = Twack::addTrailingSeparator($args['services']['directory']);
 		$this->servicesPath = Twack::addTrailingSeparator($args['services']['path']);
 
-		$this->componentAliases = array();
-		$this->classLocations = array();
+		$this->componentAliases = [];
+		$this->classLocations = [];
 	}
 
 	/**
@@ -55,7 +55,7 @@ class TwackControl extends WireData {
 	 * Looks for a component, if not found for alternative names and aliases. Returns path information if success.
 	 * @throws TwackException if error or component not found.
 	 */
-	public function getPathsForComponent($componentname, $args = array()) {
+	public function getPathsForComponent($componentname, $args = []) {
 		if (empty($componentname) || !is_string($componentname)) {
 			throw new TwackException('getPathsForComponent(): Componentname not valid. It must be a string and may not empty.');
 		}
@@ -91,38 +91,38 @@ class TwackControl extends WireData {
 		}
 
 		$resultComponent = null;
-		if (file_exists($path . $subPath . $componentDirectory . Twack::camelCaseToUnderscore($componentname) . ".class.php")) {
+		if (file_exists($path . $subPath . $componentDirectory . Twack::camelCaseToUnderscore($componentname) . '.class.php')) {
 			// class without containing folder of the same name.
 
-			$resultComponent = array(
+			$resultComponent = [
 				'directory' => $componentDirectory, // location inside of the components folder
 				'path' => $path . $subPath . $componentDirectory, // full filepath
 				'processwirePath' => $directory . $subPath . $componentDirectory, // path relative to processwire-root
-				'filename' => Twack::camelCaseToUnderscore($componentname) . ".class.php",
+				'filename' => Twack::camelCaseToUnderscore($componentname) . '.class.php',
 				'classname' => $componentname,
 				'type' => 'controller'
-			);
+			];
 		} elseif (file_exists($path . $subPath . $componentDirectory . Twack::camelCaseToUnderscore($componentname) . DIRECTORY_SEPARATOR . Twack::camelCaseToUnderscore($componentname) . '.class.php')) {
 			// the component-class is in a directory which has the same name as the component
 
-			$resultComponent = array(
+			$resultComponent = [
 				'directory' => $componentDirectory . Twack::camelCaseToUnderscore($componentname) . DIRECTORY_SEPARATOR, // location inside of the components folder
 				'path' => $path . $subPath . $componentDirectory . Twack::camelCaseToUnderscore($componentname) . DIRECTORY_SEPARATOR, // full filepath
 				'processwirePath' => $directory . $subPath . $componentDirectory . Twack::camelCaseToUnderscore($componentname) . DIRECTORY_SEPARATOR, // path relative to processwire-root
-				'filename' => Twack::camelCaseToUnderscore($componentname) . ".class.php",
+				'filename' => Twack::camelCaseToUnderscore($componentname) . '.class.php',
 				'classname' => $componentname,
 				'type' => 'controller'
-			);
-		} elseif ($componentType === 'component' && file_exists($path . $subPath . $componentDirectory . Twack::camelCaseToUnderscore($componentname) . ".view.php")) {
+			];
+		} elseif ($componentType === 'component' && file_exists($path . $subPath . $componentDirectory . Twack::camelCaseToUnderscore($componentname) . '.view.php')) {
 			// No class found, but a single view-file
 
-			$resultComponent = array(
+			$resultComponent = [
 				'directory' => $componentDirectory, // location inside of the components folder
 				'path' => $path . $subPath . $componentDirectory, // full filepath
 				'processwirePath' => $directory . $subPath . $componentDirectory, // path relative to processwire-root
 				'viewname' => Twack::camelCaseToUnderscore($componentname),
 				'type' => 'view'
-			);
+			];
 		}
 
 		if (is_array($resultComponent)) {
@@ -150,7 +150,7 @@ class TwackControl extends WireData {
 	 * @param  array  $args            Additional arguments for the component (optional)
 	 * @return TwackComponent
 	 */
-	public function getNewComponent($componentname, $args = array()) {
+	public function getNewComponent($componentname, $args = []) {
 		if (empty($componentname) || !is_string($componentname)) {
 			throw new TwackException('getNewComponent(): No valid componentname. A componentname has to be a string an may not be empty.');
 		}
@@ -167,13 +167,13 @@ class TwackControl extends WireData {
 				$args = array_merge($args, $this->getComponentArgsForAlias($componentname));
 				$componentname = $this->getComponentnameForAlias($componentname);
 			} else {
-				throw new ComponentNotFoundException('Requested componentname: "'.$componentname.'"');
+				throw new ComponentNotFoundException('Requested componentname: "' . $componentname . '"');
 			}
 		}
 
 		// Merge the parameters:
 		if (!isset($args['parameters'])) {
-			$args['parameters'] = array();
+			$args['parameters'] = [];
 		}
 		$args['parameters'] = array_merge($this->wire('twack')->getGlobalParameters(), $args['parameters']);
 
@@ -201,7 +201,7 @@ class TwackControl extends WireData {
 				$resultComponent = new $componentClassname($args);
 				$resultComponent->setView($args['location']['viewname']);
 			} else {
-				throw new ComponentNotFoundException('Requested componentname: "'.$componentname.'"');
+				throw new ComponentNotFoundException('Requested componentname: "' . $componentname . '"');
 			}
 		} catch (Exception $e) {
 			if ($e instanceof TwackException) {
@@ -217,9 +217,9 @@ class TwackControl extends WireData {
 					if (isset($args['errorClass']) && $args['errorClass'] instanceof Exception) {
 						$e = $args['errorClass'];
 					}
-                    if ($logging) {
-                        Twack::devEcho($e->getMessage());
-                    }
+					if ($logging) {
+						Twack::devEcho($e->getMessage());
+					}
 					throw $e;
 				}
 			} else {
@@ -243,12 +243,12 @@ class TwackControl extends WireData {
 	 *
 	 * @return boolean
 	 */
-	public function addComponentAlias($aliasname, $componentname, $args = array()) {
+	public function addComponentAlias($aliasname, $componentname, $args = []) {
 		if (is_string($aliasname) && is_string($componentname)) {
-			$this->componentAliases[$aliasname] = array(
+			$this->componentAliases[$aliasname] = [
 				'name' => $componentname,
-				'args' => (is_array($args) ? $args : array())
-			);
+				'args' => (is_array($args) ? $args : [])
+			];
 			return true;
 		}
 		return false;
