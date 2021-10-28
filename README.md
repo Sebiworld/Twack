@@ -1,14 +1,19 @@
 # Twack
-
 **Reusable components for your [ProcessWire](https://processwire.com)-templates!**
 
 Welcome to Twack! Twack helps you build well-structured and maintainable ProcessWire-projects. Inspired by [angular](https://angular.io).
 
-| ProcessWire-Module: | [https://modules.processwire.com/modules/twack/](https://modules.processwire.com/modules/twack/) |
+[![Current Version](https://img.shields.io/github/v/tag/Sebiworld/Twack?label=Current%20Version)](https://img.shields.io/github/v/tag/Sebiworld/Twack?label=Current%20Version) [![Current Version](https://img.shields.io/github/issues-closed-raw/Sebiworld/Twack?color=%2356d364)](https://img.shields.io/github/issues-closed-raw/Sebiworld/Twack?color=%2356d364) [![Current Version](https://img.shields.io/github/issues-raw/Sebiworld/Twack)](https://img.shields.io/github/issues-raw/Sebiworld/Twack)
+
+<a href="https://www.buymeacoffee.com/Sebi.dev" target="_blank"><img src="https://cdn.buymeacoffee.com/buttons/default-orange.png" alt="Buy Me A Coffee" height="41" width="174"></a>
+
+|||
 | ------------------: | ------------------------------------------------------------ |
+| ProcessWire-Module: | [https://modules.processwire.com/modules/twack/](https://modules.processwire.com/modules/twack/) |
 |      Support-Forum: | [https://processwire.com/talk/topic/23549-twack/](https://processwire.com/talk/topic/23549-twack/) |
 |         Repository: | [https://github.com/Sebiworld/Twack](https://github.com/Sebiworld/Twack) |
-
+| Wiki: | [https://github.com/Sebiworld/Twack/wiki/](https://github.com/Sebiworld/Twack/wiki/) |
+|||
 
 <a name="features"></a>
 
@@ -20,7 +25,8 @@ Welcome to Twack! Twack helps you build well-structured and maintainable Process
 * Define **services**, that handle global data. Twack manages the shared service-classes (->singleton) for you and lets you access the data from everywhere you need it.
 * **Not exclusive** - use Twack components to extend existing templates. You don't have to rewrite everything!
 
-## Table Of Contents
+<a name="table-of-contents"></a>
+## Table of Contents
 
 * [1: Home](https://github.com/Sebiworld/Twack/wiki)
     * [1.1: Features](https://github.com/Sebiworld/Twack/wiki#features)
@@ -178,6 +184,7 @@ We now have created a basic Twack-component and you now the general concepts how
 <a name="changelog"></a>
 
 ## Changelog
+
 ### Changes in 2.2.0 (2021-10-28)
 * JSON-API: Use AppApi (if installed) to add a 'tpage' endpoint. See more at [https://github.com/Sebiworld/Twack/wiki/8:-Ajax-Output](https://github.com/Sebiworld/Twack/wiki/8:-Ajax-Output)
 
@@ -202,3 +209,7 @@ We use [SemVer](http://semver.org/) for versioning. For the versions available, 
 ## License
 
 This project is licensed under the Mozilla Public License Version 2.0 - see the [LICENSE.md](LICENSE.md) file for details.
+
+***
+
+[**:arrow_right: Continue with 2: Naming conventions & component variants**](https://github.com/Sebiworld/Twack/wiki/2:-Naming-conventions-&-component-variants)
