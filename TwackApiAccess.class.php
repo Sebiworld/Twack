@@ -26,6 +26,13 @@ class TwackApiAccess {
 		}
 		wire('twack')->enableAjaxResponse();
 
+		$lang = SELF::getLanguageCode(wire('input')->get->pageName('lang'));
+		if (!empty($lang) && wire('languages')->get($lang)) {
+			wire('user')->language = wire('languages')->get($lang);
+		} else {
+			wire('user')->language = wire('languages')->getDefault();
+		}
+
 		if (!$page->viewable()) {
 			throw new ForbiddenException();
 		}
@@ -33,5 +40,19 @@ class TwackApiAccess {
 		$ajaxOutput = $page->render();
 		$results = json_decode($ajaxOutput, true);
 		return $results;
+	}
+
+	private static function getLanguageCode($key) {
+		$languageCodes = [
+			'de' => 'german',
+			'en' => 'english'
+		];
+
+		$code = '' . strtolower($key);
+		if (!empty($languageCodes[$key])) {
+			$code = $languageCodes[$key];
+		}
+
+		return $code;
 	}
 }

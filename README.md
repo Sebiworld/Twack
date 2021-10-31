@@ -185,7 +185,12 @@ We now have created a basic Twack-component and you now the general concepts how
 
 ## Changelog
 
+### Changes in 2.2.1 (2021-10-31)
+
+* Api: Add optional `lang` param to select a language in multilang environments
+
 ### Changes in 2.2.0 (2021-10-28)
+
 * JSON-API: Use AppApi (if installed) to add a 'tpage' endpoint. See more at [https://github.com/Sebiworld/Twack/wiki/8:-Ajax-Output](https://github.com/Sebiworld/Twack/wiki/8:-Ajax-Output)
 
 ### Changes in 2.1.4 (2021-01-04)
