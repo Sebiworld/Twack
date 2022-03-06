@@ -29,9 +29,9 @@ class TwackApiAccess {
 		if (wire('modules')->isInstalled('LanguageSupport')) {
 			$lang = '' . strtolower(wire('input')->get->pageName('lang'));
 			$langAlt = SELF::getLanguageCode($lang);
-			if (!empty($lang) && wire('languages')->get($lang)) {
+			if (!empty($lang) && wire('languages')->get($lang) instanceof Page && wire('languages')->get($lang)->id) {
 				wire('user')->language = wire('languages')->get($lang);
-			} elseif (!empty($langAlt) && wire('languages')->get($langAlt)) {
+			} elseif (!empty($langAlt) && wire('languages')->get($langAlt) instanceof Page && wire('languages')->get($langAlt)->id) {
 				wire('user')->language = wire('languages')->get($langAlt);
 			} else {
 				wire('user')->language = wire('languages')->getDefault();
