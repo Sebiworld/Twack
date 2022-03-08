@@ -506,6 +506,10 @@ class TwackComponent extends WireData {
 	 * @return array
 	 */
 	public function getAjaxOf($content) {
+		if ($this->wire('modules')->isInstalled('AppApi')) {
+			return AppApi::getAjaxOf($content);
+		}
+
 		return Twack::getAjaxOf($content);
 	}
 }
