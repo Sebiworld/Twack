@@ -46,7 +46,7 @@ class Twack extends WireData implements Module, ConfigurableModule {
 		return [
 			'title' => 'Twack',
 			'author' => 'Sebastian Schendel',
-			'version' => '2.2.3',
+			'version' => '2.2.4',
 			'summary' => 'Reusable components for your ProcessWire-templates.',
 			'singular' => true,
 			'autoload' => true,

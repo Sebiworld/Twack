@@ -185,6 +185,10 @@ We now have created a basic Twack-component and you now the general concepts how
 
 ## Changelog
 
+### Changes in 2.2.4 (2022-04-29)
+
+- Api: Added support for Multi-Language URLS
+
 ### Changes in 2.2.3 (2022-03-08)
 
 * getAjaxOf: Use AppApi-function if installed
