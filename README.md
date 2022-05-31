@@ -185,6 +185,10 @@ We now have created a basic Twack-component and you now the general concepts how
 
 ## Changelog
 
+### Changes in 2.2.5(2022-06-01)
+
+- Api: Throw 404 if page not found
+
 ### Changes in 2.2.4 (2022-04-29)
 
 - Api: Added support for Multi-Language URLS

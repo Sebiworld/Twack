@@ -60,12 +60,16 @@ class TwackApiAccess {
 				}
 			}
 
-			if (!$page->viewable(wire('user')->language)) {
+			if (!($page instanceof Page) || !$page->id) {
+				throw new NotFoundException();
+			} elseif (!$page->viewable(wire('user')->language)) {
 				throw new ForbiddenException();
 			}
 		}
 
-		if (!$page->viewable()) {
+		if (!($page instanceof Page) || !$page->id) {
+			throw new NotFoundException();
+		} elseif (!$page->viewable()) {
 			throw new ForbiddenException();
 		}
 
