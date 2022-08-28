@@ -1,5 +1,4 @@
 <?php
-
 namespace ProcessWire;
 
 use \Exception;
@@ -46,7 +45,7 @@ class Twack extends WireData implements Module, ConfigurableModule {
 		return [
 			'title' => 'Twack',
 			'author' => 'Sebastian Schendel',
-			'version' => '2.2.5',
+			'version' => '2.2.6',
 			'summary' => 'Reusable components for your ProcessWire-templates.',
 			'singular' => true,
 			'autoload' => true,
@@ -184,7 +183,13 @@ class Twack extends WireData implements Module, ConfigurableModule {
 			self::$manifest = [];
 			return self::$manifest;
 		}
+
 		$manifestPath = wire('config')->paths->root . $manifestPath;
+		if (!$manifestPath || !file_exists($manifestPath)) {
+			self::$manifest = [];
+			return self::$manifest;
+		}
+
 		$manifest = file_get_contents($manifestPath);
 		if (!$manifest) {
 			self::$manifest = [];
