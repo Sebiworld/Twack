@@ -112,21 +112,255 @@ class Twack extends WireData implements Module, ConfigurableModule {
 				$module->registerRoute(
 					'tpage',
 					[
-						['OPTIONS', '{id:\d+}', ['GET', 'POST', 'UPDATE', 'DELETE']],
-						['OPTIONS', '{path:.+}', ['GET', 'POST', 'UPDATE', 'DELETE']],
-						['OPTIONS', '', ['GET', 'POST', 'UPDATE', 'DELETE']],
-						['GET', '{id:\d+}', TwackApiAccess::class, 'pageIDRequest'],
-						['GET', '{path:.+}', TwackApiAccess::class, 'pagePathRequest'],
-						['GET', '', TwackApiAccess::class, 'dashboardRequest'],
-						['POST', '{id:\d+}', TwackApiAccess::class, 'pageIDRequest'],
-						['POST', '{path:.+}', TwackApiAccess::class, 'pagePathRequest'],
-						['POST', '', TwackApiAccess::class, 'dashboardRequest'],
-						['UPDATE', '{id:\d+}', TwackApiAccess::class, 'pageIDRequest'],
-						['UPDATE', '{path:.+}', TwackApiAccess::class, 'pagePathRequest'],
-						['UPDATE', '', TwackApiAccess::class, 'dashboardRequest'],
-						['DELETE', '{id:\d+}', TwackApiAccess::class, 'pageIDRequest'],
-						['DELETE', '{path:.+}', TwackApiAccess::class, 'pagePathRequest'],
-						['DELETE', '', TwackApiAccess::class, 'dashboardRequest']
+						['OPTIONS', '{id:\d+}', ['GET', 'POST', 'PUT', 'DELETE'], [], [], [
+							// documentation
+							'summary' => 'Preflight options',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'id:\d+',
+									'in' => 'path',
+									'description' => 'Page ID of the parent page of the requested file',
+									'required' => true,
+									'schema' => [
+										'type' => 'integer',
+										'format' => 'int64'
+									]
+								]
+							]
+						]],
+						['OPTIONS', '{path:.+}', ['GET', 'POST', 'PUT', 'DELETE'], [],  [], [
+							// documentatio
+							'summary' => 'Preflight options',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'path:.+',
+									'in' => 'path',
+									'description' => 'Page path of the parent page of the requested file',
+									'required' => true,
+									'schema' => [
+										'type' => 'string'
+									]
+								]
+							]
+						]],
+						['OPTIONS', '', ['GET', 'POST', 'PUT', 'DELETE'], [], [], [
+							'summary' => 'Preflight options',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+						]],
+						['GET', '{id:\d+}', TwackApiAccess::class, 'pageIDRequest', [], [
+							// documentation
+							'summary' => 'Get a page by id.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'id:\d+',
+									'in' => 'path',
+									'description' => 'Page ID',
+									'required' => true,
+									'schema' => [
+										'type' => 'integer',
+										'format' => 'int64'
+									]
+								]
+							]
+						]],
+						['GET', '{path:.+}', TwackApiAccess::class, 'pagePathRequest', [], [
+							// documentation
+							'summary' => 'Get a page by its path.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'path:.+',
+									'in' => 'path',
+									'description' => 'Page path',
+									'required' => true,
+									'schema' => [
+										'type' => 'string'
+									]
+								]
+							]
+						]],
+						['GET', '', TwackApiAccess::class, 'dashboardRequest', [], [
+							// documentation
+							'summary' => 'Get the root page.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+						]],
+						['POST', '{id:\d+}', TwackApiAccess::class, 'pageIDRequest', [], [
+							// documentation
+							'summary' => 'POST to a page by its id.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'id:\d+',
+									'in' => 'path',
+									'description' => 'Page ID',
+									'required' => true,
+									'schema' => [
+										'type' => 'integer',
+										'format' => 'int64'
+									]
+								]
+							]
+						]],
+						['POST', '{path:.+}', TwackApiAccess::class, 'pagePathRequest', [], [
+							// documentation
+							'summary' => 'POST to a page by its path.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'path:.+',
+									'in' => 'path',
+									'description' => 'Page path',
+									'required' => true,
+									'schema' => [
+										'type' => 'string'
+									]
+								]
+							]
+						]],
+						['POST', '', TwackApiAccess::class, 'dashboardRequest', [], [
+							// documentation
+							'summary' => 'POST to the root page.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+						]],
+						['PUT', '{id:\d+}', TwackApiAccess::class, 'pageIDRequest', [], [
+							// documentation
+							'summary' => 'PUT data to a page by its id.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'id:\d+',
+									'in' => 'path',
+									'description' => 'Page ID',
+									'required' => true,
+									'schema' => [
+										'type' => 'integer',
+										'format' => 'int64'
+									]
+								]
+							]
+						]],
+						['PUT', '{path:.+}', TwackApiAccess::class, 'pagePathRequest', [], [
+							// documentation
+							'summary' => 'PUT data to a page by its path.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'path:.+',
+									'in' => 'path',
+									'description' => 'Page path',
+									'required' => true,
+									'schema' => [
+										'type' => 'string'
+									]
+								]
+							]
+						]],
+						['PUT', '', TwackApiAccess::class, 'dashboardRequest', [], [
+							// documentation
+							'summary' => 'PUT data to the root page.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+						]],
+						['DELETE', '{id:\d+}', TwackApiAccess::class, 'pageIDRequest', [], [
+							// documentation
+							'summary' => 'DELETE a page by its id.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'id:\d+',
+									'in' => 'path',
+									'description' => 'Page ID',
+									'required' => true,
+									'schema' => [
+										'type' => 'integer',
+										'format' => 'int64'
+									]
+								]
+							]
+						]],
+						['DELETE', '{path:.+}', TwackApiAccess::class, 'pagePathRequest', [], [
+							// documentation
+							'summary' => 'DELETE a page by its path.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							],
+							'parameters' => [
+								[
+									'name' => 'path:.+',
+									'in' => 'path',
+									'description' => 'Page path',
+									'required' => true,
+									'schema' => [
+										'type' => 'string'
+									]
+								]
+							]
+						]],
+						['DELETE', '', TwackApiAccess::class, 'dashboardRequest', [], [
+							// documentation
+							'summary' => 'DELETE the root page.',
+							'tags' => ['Twack'],
+							'security' => [
+								['apiKey' => []],
+								['bearerAuth' => []]
+							]
+						]]
 					]
 				);
 			}
