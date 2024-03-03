@@ -1,5 +1,4 @@
 <?php
-
 namespace ProcessWire;
 
 use \Exception;
@@ -12,12 +11,13 @@ use \ReflectionClass;
 
 class TwackComponent extends WireData {
 	protected $page; 			// ProcessWire-Page, on which the component should build its information on.
-												// If not set explicitly to another value, $page contains wire('page')
+	// If not set explicitly to another value, $page contains wire('page')
 	protected $twack; 		// Singleton-instance of the Twack-module
 	protected $location;	// Location-information of the component. Contains absolute and relative paths to the component's files.
 	protected $viewArgs;	// Args for the view.
 	protected $childComponents; // Subcomponents, which were added via $this->addComponent() as children.
 	protected $namedComponents; // Subcomponents, which were added via $this->addComponent() with an explicit componentname.
+	protected $componentLists;
 	protected $inlineStyles; // Paths to stylesheets, which should be added inline.
 
 	public function __construct($args = []) {
@@ -43,6 +43,7 @@ class TwackComponent extends WireData {
 		// All child-components will be stored in $this->childComponents (unnamed) or in $this->namedComponents (components with a given key)
 		$this->childComponents = new WireArray();
 		$this->namedComponents = new WireArray();
+		$this->componentLists = new WireArray();
 
 		// You can pass custom parameters to a component, which will be accessible directly as attributes. Pass i.e. $args['parameters']['testvalue'] = 1 to a component, and call it inside of it with $this->testvalue. All parameters will be passed to the view as well.
 		if (isset($args['parameters']) && is_array($args['parameters'])) {
@@ -128,6 +129,8 @@ class TwackComponent extends WireData {
 	 *                    name 				If you set a name for the new component, it will be accessable via its name. Otherwise,
 	 *                    						it will be added to the collection $this->childComponents. Call
 	 *                    						$this->getComponent($name) to call the added component.
+	 * 										list        If you set a list-name the component will be added to a named list ($this->componentLists).
+	 * 																Can be combined with the prepend and position args
 	 *                    prepend 			If the component wasn't added with a individual name, it will be added to
 	 *                    						$this->childComponents. Set prepend to true to ensure that the new component will be
 	 *                    						added in front of existing elements in this collection.
@@ -157,6 +160,21 @@ class TwackComponent extends WireData {
 			if (isset($args['name']) && is_string($args['name'])) {
 				// A name was passed for the new component, under which it will be available later:
 				$this->namedComponents[$args['name']] = $resultComponent;
+			} else if (isset($args['list']) && is_string($args['list'])) {
+				if(empty($this->componentLists[$args['list']])){
+					$this->componentLists[$args['list']] = new WireArray();
+				}
+				if (isset($args['prepend']) && !!$args['prepend']) {
+					// Add the component in front of existing elements in $this->componentLists[$args['list']]:
+					$this->componentLists[$args['list']]->prepend($resultComponent);
+				} elseif (isset($args['position']) && is_int($args['position']) && $args['position'] < count($this->componentLists[$args['list']])) {
+					// Add the new component at a specific position in $this->componentLists[$args['list']]
+					$existingComponent = $this->componentLists[$args['list']]->get($args['position']);
+					$this->componentLists[$args['list']]->insertBefore($resultComponent, $existingComponent);
+				} else {
+					// Default: Add component after existing components:
+					$this->componentLists[$args['list']]->add($resultComponent);
+				}
 			} else {
 				if (isset($args['prepend']) && !!$args['prepend']) {
 					// Add the component in front of existing elements in $this->childComponents:
@@ -219,17 +237,24 @@ class TwackComponent extends WireData {
 	}
 
 	/**
-	 * Resets $this->childComponents, removes added subcomponents:
+	 * Resets $this->childComponents, removes added subcomponents
 	 */
 	public function resetComponents() {
 		$this->childComponents = new WireArray();
 	}
 
 	/**
-	 * Resets $this->namedComponents, remove all added named subcomponents:
+	 * Resets $this->namedComponents, remove all added named subcomponents
 	 */
 	public function resetNamedComponents() {
 		$this->namedComponents = new WireArray();
+	}
+
+	/**
+	 * Resets $this->componentLists, removes all componentLists from this component
+	 */
+	public function resetComponentLists() {
+		$this->componentLists = new WireArray();
 	}
 
 	/**
@@ -290,6 +315,28 @@ class TwackComponent extends WireData {
 	 */
 	public function getNamedComponents() {
 		return $this->namedComponents;
+	}
+
+		/**
+	 * Returns a single childcomponent.
+	 * @param  string $componentname 	Name of the component or position in $this->childComponents
+	 * @return WireArray<TwackComponent>
+	 */
+	public function getComponentList($listname, $args = []) {
+		// Look for componentlist:
+		if ($this->componentLists->has($listname)) {
+			return $this->componentLists->get($listname);
+		}
+
+		// Nothing found, return empty WireArray
+		return new WireArray();
+	}
+
+	/**
+	 * Returns all component lists associated with this component.
+	 */
+	public function getComponentLists() {
+		return $this->componentLists;
 	}
 
 	/**
@@ -411,6 +458,7 @@ class TwackComponent extends WireData {
 		}
 		$view->component = $this;
 		$view->childComponents = $this->getChildComponents();
+		$view->componentLists = $this->getComponentLists();
 
 		return $view->render();
 	}
