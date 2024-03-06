@@ -45,7 +45,7 @@ class Twack extends WireData implements Module, ConfigurableModule {
 		return [
 			'title' => 'Twack',
 			'author' => 'Sebastian Schendel',
-			'version' => '2.3.0',
+			'version' => '2.3.1',
 			'summary' => 'Reusable components for your ProcessWire-templates.',
 			'singular' => true,
 			'autoload' => true,
@@ -941,6 +941,11 @@ class Twack extends WireData implements Module, ConfigurableModule {
 	 * @return array
 	 */
 	public static function getAjaxOf($content) {
+		if (wire('modules')->isInstalled('AppApi')) {
+			$module = wire('modules')->get('AppApi');
+			return $module->getAjaxOf($content);
+		}
+
 		$output = [];
 
 		if ($content instanceof PageFiles) {
@@ -961,22 +966,25 @@ class Twack extends WireData implements Module, ConfigurableModule {
 			];
 
 			if ($content instanceof PageImage) {
-				$output['basename_mini'] = $content->size(600, 0)->basename;
-				$output['width'] = $content->width;
-				$output['height'] = $content->height;
-				$output['dimension_ratio'] = round($content->width / $content->height, 2);
+				try {
+					$output['basename_mini'] = $content->size(600, 0)->basename;
+					$output['width'] = $content->width;
+					$output['height'] = $content->height;
+					$output['dimension_ratio'] = round($content->width / $content->height, 2);
 
-				if ($content->original) {
-					$output['original'] = [
-						'basename' => $content->original->basename,
-						'name' => $content->original->name,
-						'filesize' => $content->original->filesize,
-						'filesizeStr' => $content->original->filesizeStr,
-						'ext' => $content->original->ext,
-						'width' => $content->original->width,
-						'height' => $content->original->height,
-						'dimension_ratio' => round($content->original->width / $content->original->height, 2)
-					];
+					if ($content->original) {
+						$output['original'] = [
+							'basename' => $content->original->basename,
+							'name' => $content->original->name,
+							'filesize' => $content->original->filesize,
+							'filesizeStr' => $content->original->filesizeStr,
+							'ext' => $content->original->ext,
+							'width' => $content->original->width,
+							'height' => $content->original->height,
+							'dimension_ratio' => round($content->original->width / $content->original->height, 2)
+						];
+					}
+				} catch (\Exception $e) {
 				}
 			}
 
@@ -997,6 +1005,10 @@ class Twack extends WireData implements Module, ConfigurableModule {
 			foreach ($content as $page) {
 				$output[] = self::getAjaxOf($page);
 			}
+		} elseif ($content instanceof SelectableOptionArray) {
+			foreach ($content as $item) {
+				$output[] = self::getAjaxOf($item);
+			}
 		} elseif ($content instanceof Page && $content->id) {
 			$output = [
 				'id' => $content->id,
@@ -1008,6 +1020,18 @@ class Twack extends WireData implements Module, ConfigurableModule {
 				'httpUrl' => $content->httpUrl,
 				'template' => self::getAjaxOf($content->template)
 			];
+		} elseif ($content instanceof SelectableOption) {
+			$output = [
+				'id' => $content->id,
+				'title' => $content->title,
+				'value' => $content->value
+			];
+		} elseif ($content instanceof WireArray) {
+			foreach ($content as $item) {
+				$output[] = self::getAjaxOf($item);
+			}
+		} elseif ($content instanceof WireData) {
+			$output = $content->getArray();
 		}
 
 		return $output;

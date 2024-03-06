@@ -185,6 +185,11 @@ We now have created a basic Twack-component and you now the general concepts how
 
 ## Changelog
 
+### Changes in 2.3.1(2024-03-04)
+
+- Use AppApi getAjaxOf() if available
+- Improved Fallback getAjaxOf()
+
 ### Changes in 2.3.0(2024-03-03)
 
 - Added componentLists to TwackComponent
