@@ -45,7 +45,7 @@ class Twack extends WireData implements Module, ConfigurableModule {
 		return [
 			'title' => 'Twack',
 			'author' => 'Sebastian Schendel',
-			'version' => '2.3.1',
+			'version' => '2.3.2',
 			'summary' => 'Reusable components for your ProcessWire-templates.',
 			'singular' => true,
 			'autoload' => true,
@@ -968,9 +968,11 @@ class Twack extends WireData implements Module, ConfigurableModule {
 			if ($content instanceof PageImage) {
 				try {
 					$output['basename_mini'] = $content->size(600, 0)->basename;
-					$output['width'] = $content->width;
+					$output['width'] = @$content->width;
 					$output['height'] = $content->height;
-					$output['dimension_ratio'] = round($content->width / $content->height, 2);
+					if (is_numeric($content->width) && !empty($content->width) && is_numeric($content->height) && !empty($content->height)) {
+						$output['dimension_ratio'] = round($content->width / $content->height, 2);
+					}
 
 					if ($content->original) {
 						$output['original'] = [
@@ -980,9 +982,12 @@ class Twack extends WireData implements Module, ConfigurableModule {
 							'filesizeStr' => $content->original->filesizeStr,
 							'ext' => $content->original->ext,
 							'width' => $content->original->width,
-							'height' => $content->original->height,
-							'dimension_ratio' => round($content->original->width / $content->original->height, 2)
+							'height' => $content->original->height
 						];
+
+						if (is_numeric($content->original->width) && !empty($content->original->width) && is_numeric($content->original->height) && !empty($content->original->height)) {
+							$output['original']['dimension_ratio'] = round($content->original->width / $content->original->height, 2);
+						}
 					}
 				} catch (\Exception $e) {
 				}
