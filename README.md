@@ -185,6 +185,11 @@ We now have created a basic Twack-component and you now the general concepts how
 
 ## Changelog
 
+### Changes in 2.3.3(2024-09-12)
+
+- Add hash to page requests
+- Return 204 (No Content) if matching hash is sent via GET param
+
 ### Changes in 2.3.1(2024-03-04)
 
 - Use AppApi getAjaxOf() if available

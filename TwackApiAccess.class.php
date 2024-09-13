@@ -1,17 +1,16 @@
 <?php
-
 namespace ProcessWire;
 
 class TwackApiAccess {
 	public static function pageIDRequest($data) {
 		$data = AppApiHelper::checkAndSanitizeRequiredParameters($data, ['id|int']);
 		$page = wire('pages')->get('id=' . $data->id);
-		return self::pageRequest($page, '');
+		return self::pageRequest($page, '', $data);
 	}
 
-	public static function dashboardRequest() {
+	public static function dashboardRequest($data) {
 		$page = wire('pages')->get('/');
-		return self::pageRequest($page, '');
+		return self::pageRequest($page, '', $data);
 	}
 
 	public static function pagePathRequest($data) {
@@ -26,19 +25,19 @@ class TwackApiAccess {
 				if ($value !== $path) {
 					continue;
 				}
-				return self::pageRequest($rootPage, $key);
+				return self::pageRequest($rootPage, $key, $data);
 			}
 		}
 
 		$info = wire('pages')->pathFinder()->get($path);
 		if (!empty($info['language']['name'])) {
-			return self::pageRequest($page, $info['language']['name']);
+			return self::pageRequest($page, $info['language']['name'], $data);
 		}
 
-		return self::pageRequest($page, '');
+		return self::pageRequest($page, '', $data);
 	}
 
-	protected static function pageRequest(Page $page, $languageFromPath) {
+	protected static function pageRequest(Page $page, $languageFromPath, $data) {
 		if (!wire('modules')->isInstalled('Twack')) {
 			throw new InternalServererrorException('Twack module not found.');
 		}
@@ -75,6 +74,12 @@ class TwackApiAccess {
 
 		$ajaxOutput = $page->render();
 		$results = json_decode($ajaxOutput, true);
+		$results['hash'] = md5($ajaxOutput);
+
+		if (!empty($data->hash) && !empty($results['hash']) && $results['hash'] === $data->hash) {
+			throw new AppApiException('No new contents', 204, ['errorcode' => 'no_new_contents']);
+		}
+
 		return $results;
 	}
 
