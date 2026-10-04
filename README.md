@@ -185,6 +185,10 @@ We now have created a basic Twack-component and you now the general concepts how
 
 ## Changelog
 
+### Changes in 2.4.0(2026-10-02)
+
+- `tpage` endpoint: new opt-in setting `TwackApiAccess::$hideInaccessiblePages`. If set to `true` (e.g. in `site/ready.php` or in your AppApi routes file), a page the current user may not view is answered with the same 404 response as a missing page instead of a 403, so the response does not reveal that the page exists. Default `false`: responses stay as before.
+
 ### Changes in 2.3.3(2024-09-12)
 
 - Add hash to page requests
