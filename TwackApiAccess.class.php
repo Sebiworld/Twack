@@ -2,6 +2,15 @@
 namespace ProcessWire;
 
 class TwackApiAccess {
+	/**
+	 * If true, a page the current user may not view is answered like a missing
+	 * page (404 NotFoundException) instead of with 403 ForbiddenException, so the
+	 * response does not reveal that the page exists. Off by default.
+	 *
+	 * @var bool
+	 */
+	public static $hideInaccessiblePages = false;
+
 	public static function pageIDRequest($data) {
 		$data = AppApiHelper::checkAndSanitizeRequiredParameters($data, ['id|int']);
 		$page = wire('pages')->get('id=' . $data->id);
@@ -59,18 +68,10 @@ class TwackApiAccess {
 				}
 			}
 
-			if (!($page instanceof Page) || !$page->id) {
-				throw new NotFoundException();
-			} elseif (!$page->viewable(wire('user')->language)) {
-				throw new ForbiddenException();
-			}
+			self::checkPageAccess($page, wire('user')->language);
 		}
 
-		if (!($page instanceof Page) || !$page->id) {
-			throw new NotFoundException();
-		} elseif (!$page->viewable()) {
-			throw new ForbiddenException();
-		}
+		self::checkPageAccess($page);
 
 		$ajaxOutput = $page->render();
 		$results = json_decode($ajaxOutput, true);
@@ -81,6 +82,29 @@ class TwackApiAccess {
 		}
 
 		return $results;
+	}
+
+	/**
+	 * Throws if the page does not exist or the current user may not view it.
+	 * Both cases throw from the same place, so with $hideInaccessiblePages
+	 * the responses are identical.
+	 *
+	 * @param Page $page
+	 * @param Language|null $language check the view access for this language
+	 * @throws NotFoundException
+	 * @throws ForbiddenException
+	 */
+	protected static function checkPageAccess($page, $language = null) {
+		$exists = $page instanceof Page && $page->id;
+		$viewable = $exists && ($language === null ? $page->viewable() : $page->viewable($language));
+
+		if (!$exists || (!$viewable && self::$hideInaccessiblePages)) {
+			throw new NotFoundException();
+		}
+
+		if (!$viewable) {
+			throw new ForbiddenException();
+		}
 	}
 
 	/**
